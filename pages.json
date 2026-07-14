@@ -1,0 +1,158 @@
+{
+  "pages": [
+    {
+      "path": "pages/adopt/index",
+      "style": {
+        "navigationBarTitleText": "暖宠归家",
+        "navigationBarBackgroundColor": "#F8F6F1",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/community/index",
+      "style": {
+        "navigationBarTitleText": "宠物圈",
+        "navigationBarBackgroundColor": "#F8F6F1",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/guide/index",
+      "style": {
+        "navigationBarTitleText": "注意事项",
+        "navigationBarBackgroundColor": "#F8F6F1",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationBarBackgroundColor": "#F8F6F1",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/user/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/user/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    },
+    {
+      "path": "pages/user/edit",
+      "style": {
+        "navigationBarTitleText": "修改资料"
+      }
+    },
+    {
+      "path": "pages/pet/detail",
+      "style": {
+        "navigationBarTitleText": "宠物详情"
+      }
+    },
+    {
+      "path": "pages/pet/publish",
+      "style": {
+        "navigationBarTitleText": "发布救助"
+      }
+    },
+    {
+      "path": "pages/pet/my-pets",
+      "style": {
+        "navigationBarTitleText": "我的发布"
+      }
+    },
+    {
+      "path": "pages/adoption/apply",
+      "style": {
+        "navigationBarTitleText": "申请领养"
+      }
+    },
+    {
+      "path": "pages/adoption/my",
+      "style": {
+        "navigationBarTitleText": "我的申请"
+      }
+    },
+    {
+      "path": "pages/adoption/received",
+      "style": {
+        "navigationBarTitleText": "收到申请"
+      }
+    },
+    {
+      "path": "pages/profile/favorites",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/profile/likes",
+      "style": {
+        "navigationBarTitleText": "我的点赞"
+      }
+    },
+    {
+      "path": "pages/profile/messages",
+      "style": {
+        "navigationBarTitleText": "消息通知"
+      }
+    },
+    {
+      "path": "pages/post/publish",
+      "style": {
+        "navigationBarTitleText": "发布动态"
+      }
+    },
+    {
+      "path": "pages/post/detail",
+      "style": {
+        "navigationBarTitleText": "动态详情"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "暖宠归家",
+    "navigationBarBackgroundColor": "#F8F6F1",
+    "backgroundColor": "#F8F6F1"
+  },
+  "tabBar": {
+    "color": "#91887C",
+    "selectedColor": "#F08A5D",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/adopt/index",
+        "text": "领养",
+        "iconPath": "static/tabbar/adopt.png",
+        "selectedIconPath": "static/tabbar/adopt-active.png"
+      },
+      {
+        "pagePath": "pages/community/index",
+        "text": "宠物圈",
+        "iconPath": "static/tabbar/community.png",
+        "selectedIconPath": "static/tabbar/community-active.png"
+      },
+      {
+        "pagePath": "pages/guide/index",
+        "text": "注意事项",
+        "iconPath": "static/tabbar/guide.png",
+        "selectedIconPath": "static/tabbar/guide-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
+      }
+    ]
+  }
+}
