@@ -1,16 +1,9 @@
-<script>
+﻿<script>
+import { ensureSeedData } from './common/storage.js'
+
 export default {
   onLaunch() {
-    const userInfo = uni.getStorageSync('userInfo')
-    if (!userInfo) {
-      uni.setStorageSync('userInfo', {
-        nickname: '未登录用户',
-        city: '待完善',
-        phone: '',
-        bio: '完善资料后，领养申请会更容易被信任。',
-        experience: '暂无养宠经验'
-      })
-    }
+    ensureSeedData()
   }
 }
 </script>
@@ -45,17 +38,6 @@ button {
 
 .muted {
   color: #8f877d;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  background: #fff3dd;
-  color: #9b6227;
-  font-size: 24rpx;
 }
 
 .primary-btn {
