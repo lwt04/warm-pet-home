@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "server": "node server/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
