@@ -43,8 +43,15 @@ export default {
         uni.showToast({ title: '缺少宠物信息', icon: 'none' })
         return
       }
-      if (!this.form.contact.trim() || !this.form.reason.trim()) {
-        uni.showToast({ title: '请填写联系方式和申请理由', icon: 'none' })
+      const required = [
+        ['home', '请填写居住情况'],
+        ['experience', '请填写养宠经验'],
+        ['contact', '请填写联系方式'],
+        ['reason', '请填写申请理由']
+      ]
+      const missing = required.find(([key]) => !String(this.form[key]).trim())
+      if (missing) {
+        uni.showToast({ title: missing[1], icon: 'none' })
         return
       }
       await api.createApplication({ ...this.form, petId: this.petId })

@@ -18,7 +18,9 @@
       </view>
 
       <text class="post-content">{{ post.content }}</text>
-      <view class="post-image"><text>动态图片占位</text></view>
+      <view v-if="post.images && post.images.length" class="image-grid" :class="{ single: post.images.length === 1 }">
+        <image v-for="image in post.images" :key="image" :src="image" mode="aspectFill" />
+      </view>
 
       <view class="post-actions" @click.stop>
         <button :class="{ active: isLiked(post) }" @click="like(post.id)">点赞 {{ post.likes.length }}</button>
@@ -30,31 +32,42 @@
 </template>
 
 <script>
-import { api, getLocalUser } from '../../common/api.js'
+import { api, getLocalUser, isLoggedIn } from '../../common/api.js'
 
 export default {
   data() { return { posts: [], userId: '' } },
   onShow() { this.loadData() },
   methods: {
     async loadData() {
-      const user = getLocalUser() || { id: 'u_demo' }
+      const user = getLocalUser() || {}
       this.userId = user.id
       const data = await api.getPosts()
       this.posts = data.posts || []
     },
     isLiked(post) { return post.likes.includes(this.userId) },
     isFavorited(post) { return post.favorites.includes(this.userId) },
+    requireLogin() {
+      if (isLoggedIn()) return true
+      uni.showToast({ title: '请先登录后操作', icon: 'none' })
+      setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+      return false
+    },
     async like(id) {
+      if (!this.requireLogin()) return
       await api.togglePostLike(id)
       await this.loadData()
     },
     async favorite(id) {
+      if (!this.requireLogin()) return
       const data = await api.togglePostFavorite(id)
       await this.loadData()
       const favorited = data.favorited
       uni.showToast({ title: favorited ? '已收藏' : '已取消', icon: 'none' })
     },
-    goPublish() { uni.navigateTo({ url: '/pages/post/publish' }) },
+    goPublish() {
+      if (!this.requireLogin()) return
+      uni.navigateTo({ url: '/pages/post/publish' })
+    },
     goDetail(id) { uni.navigateTo({ url: `/pages/post/detail?id=${id}` }) }
   }
 }
@@ -71,7 +84,10 @@ export default {
 .author { color: #2f2a25; font-size: 28rpx; font-weight: 800; }
 .time { margin-top: 6rpx; color: #9d9489; font-size: 22rpx; }
 .post-content { display: block; color: #3c352f; font-size: 29rpx; line-height: 1.6; }
-.post-image { display: flex; align-items: center; justify-content: center; height: 260rpx; margin: 20rpx 0; border-radius: 24rpx; background: #f4eee4; color: #a69a8d; font-size: 26rpx; }
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8rpx; margin: 20rpx 0; }
+.image-grid image { width: 100%; aspect-ratio: 1; border-radius: 12rpx; background: #f4eee4; }
+.image-grid.single { grid-template-columns: 420rpx; }
+.image-grid.single image { aspect-ratio: 4 / 3; border-radius: 18rpx; }
 .post-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; }
 .post-actions button { height: 64rpx; border-radius: 999rpx; background: #f8f6f1; color: #74695d; font-size: 24rpx; line-height: 64rpx; }
 .post-actions button.active { background: #fff0e8; color: #f08a5d; }

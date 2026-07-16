@@ -4,7 +4,20 @@
       <text class="form-title">发布宠物圈动态</text>
       <text class="form-subtitle">分享救助进展、领养经验或照护记录。</text>
       <view class="field"><text>动态内容</text><textarea v-model="content" placeholder="写下你想分享的内容" /></view>
-      <view class="upload-box"><text>图片上传占位</text><text class="muted">后续接入 uni.chooseImage</text></view>
+      <view class="field">
+        <text>动态图片</text>
+        <view class="image-grid">
+          <view v-for="(image, index) in images" :key="image" class="image-item">
+            <image :src="image" mode="aspectFill" />
+            <button class="remove-image" @click="removeImage(index)">×</button>
+          </view>
+          <button v-if="images.length < 9" class="add-image" @click="chooseImages">
+            <text>+</text>
+            <text>添加图片</text>
+          </button>
+        </view>
+        <text class="image-tip">最多 9 张，会在宠物圈按宫格展示。</text>
+      </view>
       <button class="primary-btn" @click="submit">发布动态</button>
     </view>
   </view>
@@ -14,14 +27,31 @@
 import { api } from '../../common/api.js'
 
 export default {
-  data() { return { content: '' } },
+  data() { return { content: '', images: [] } },
   methods: {
+    chooseImages() {
+      uni.chooseImage({
+        count: 9 - this.images.length,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          this.images = this.images.concat(res.tempFilePaths || []).slice(0, 9)
+        }
+      })
+    },
+    removeImage(index) {
+      this.images.splice(index, 1)
+    },
     async submit() {
       if (!this.content.trim()) {
         uni.showToast({ title: '请填写动态内容', icon: 'none' })
         return
       }
-      await api.createPost({ content: this.content.trim() })
+      if (!this.images.length) {
+        uni.showToast({ title: '请至少添加一张动态图片', icon: 'none' })
+        return
+      }
+      await api.createPost({ content: this.content.trim(), images: this.images })
       uni.showToast({ title: '发布成功', icon: 'success' })
       setTimeout(() => uni.switchTab({ url: '/pages/community/index' }), 500)
     }
@@ -36,6 +66,11 @@ export default {
 .field { margin-bottom: 22rpx; }
 .field text { display: block; margin-bottom: 12rpx; color: #5f554d; font-size: 26rpx; font-weight: 700; }
 .field textarea { width: 100%; height: 240rpx; padding: 22rpx 24rpx; border-radius: 22rpx; background: #f8f6f1; font-size: 28rpx; }
-.upload-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 220rpx; margin-bottom: 26rpx; border: 2rpx dashed #e5d8c8; border-radius: 26rpx; color: #9d9489; font-size: 27rpx; }
-.upload-box .muted { margin-top: 10rpx; font-size: 24rpx; }
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; margin-bottom: 26rpx; }
+.image-item, .add-image { position: relative; width: 100%; aspect-ratio: 1; border-radius: 20rpx; overflow: hidden; background: #f8f6f1; }
+.image-item image { width: 100%; height: 100%; }
+.remove-image { position: absolute; top: 8rpx; right: 8rpx; width: 44rpx; height: 44rpx; border-radius: 50%; background: rgba(47, 42, 37, 0.72); color: #fff; font-size: 28rpx; line-height: 42rpx; }
+.add-image { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx dashed #e5d8c8; color: #9d9489; font-size: 24rpx; }
+.add-image text:first-child { margin-bottom: 4rpx; color: #f08a5d; font-size: 46rpx; line-height: 1; }
+.image-tip { display: block; margin-top: -12rpx; color: #9d9489; font-size: 23rpx; line-height: 1.45; }
 </style>

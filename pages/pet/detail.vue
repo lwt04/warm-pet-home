@@ -1,7 +1,12 @@
 ﻿<template>
   <view class="page detail-page">
     <view v-if="pet">
-      <view class="cover"><text>{{ pet.type }}</text></view>
+      <swiper v-if="pet.images && pet.images.length" class="cover-swiper" indicator-dots circular>
+        <swiper-item v-for="image in pet.images" :key="image">
+          <image class="cover-image" :src="image" mode="aspectFill" />
+        </swiper-item>
+      </swiper>
+      <view v-else class="cover"><text>{{ pet.type }}</text></view>
 
       <view class="detail-card">
         <view class="title-row">
@@ -22,7 +27,7 @@
 
       <view class="bottom-actions">
         <button class="ghost-btn" @click="toggleFavorite">{{ favorited ? '取消收藏' : '收藏' }}</button>
-        <button class="primary-btn" @click="apply">申请领养</button>
+        <button class="primary-btn" :class="{ disabled: !canApply }" @click="apply">{{ applyText }}</button>
       </view>
     </view>
 
@@ -33,14 +38,29 @@
 </template>
 
 <script>
-import { api } from '../../common/api.js'
+import { api, getLocalUser, isLoggedIn } from '../../common/api.js'
 
 export default {
   data() {
     return {
       id: '',
       pet: null,
-      favorited: false
+      favorited: false,
+      userId: ''
+    }
+  },
+  computed: {
+    isMine() {
+      return this.pet && this.pet.publisherId === this.userId
+    },
+    canApply() {
+      return Boolean(this.pet && isLoggedIn() && !this.isMine && this.pet.status !== '已领养')
+    },
+    applyText() {
+      if (!isLoggedIn()) return '登录后申请'
+      if (this.isMine) return '自己发布'
+      if (this.pet && this.pet.status === '已领养') return '已领养'
+      return '申请领养'
     }
   },
   onLoad(options) {
@@ -51,12 +71,19 @@ export default {
   },
   methods: {
     async loadPet() {
+      const user = getLocalUser() || {}
+      this.userId = user.id || ''
       const data = await api.getPet(this.id)
       this.pet = data.pet
       this.favorited = Boolean(data.pet && data.pet.favorited)
     },
     async toggleFavorite() {
       if (!this.pet) return
+      if (!isLoggedIn()) {
+        uni.showToast({ title: '请先登录后再收藏', icon: 'none' })
+        setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+        return
+      }
       if (this.favorited) {
         await api.unfavoritePet(this.pet.id)
         this.favorited = false
@@ -68,6 +95,19 @@ export default {
     },
     apply() {
       if (!this.pet) return
+      if (!isLoggedIn()) {
+        uni.showToast({ title: '请先登录后再申请', icon: 'none' })
+        setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+        return
+      }
+      if (this.isMine) {
+        uni.showToast({ title: '不能申请自己发布的宠物', icon: 'none' })
+        return
+      }
+      if (this.pet.status === '已领养') {
+        uni.showToast({ title: '该宠物已被领养', icon: 'none' })
+        return
+      }
       uni.navigateTo({ url: `/pages/adoption/apply?petId=${this.pet.id}` })
     }
   }
@@ -76,6 +116,8 @@ export default {
 
 <style scoped>
 .cover { display: flex; align-items: center; justify-content: center; height: 420rpx; margin-bottom: 24rpx; border-radius: 32rpx; background: #f2eadf; color: #9b6227; font-size: 42rpx; font-weight: 800; }
+.cover-swiper { height: 420rpx; margin-bottom: 24rpx; border-radius: 32rpx; overflow: hidden; background: #f2eadf; }
+.cover-image { width: 100%; height: 100%; }
 .detail-card { padding: 28rpx; margin-bottom: 22rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; margin-bottom: 14rpx; }
 .pet-name { color: #2f2a25; font-size: 40rpx; font-weight: 800; }
@@ -84,5 +126,6 @@ export default {
 .desc { margin-top: 18rpx; color: #3c352f; }
 .card-title { display: block; margin-bottom: 16rpx; color: #2f2a25; font-size: 31rpx; font-weight: 800; }
 .bottom-actions { display: grid; grid-template-columns: 220rpx 1fr; gap: 18rpx; padding-bottom: 30rpx; }
+.primary-btn.disabled { opacity: 0.55; box-shadow: none; }
 .empty-box { padding: 80rpx 24rpx; border-radius: 28rpx; background: #fff; color: #8f877d; text-align: center; font-size: 28rpx; }
 </style>

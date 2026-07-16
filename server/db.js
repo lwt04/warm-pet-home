@@ -1,4 +1,4 @@
-const fs = require('node:fs')
+﻿const fs = require('node:fs')
 const path = require('node:path')
 const { DatabaseSync } = require('node:sqlite')
 
@@ -18,6 +18,13 @@ function now() {
 
 function makeId(prefix) {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`
+}
+
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((item) => item.name)
+  if (!columns.includes(column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+  }
 }
 
 function initDatabase() {
@@ -45,6 +52,7 @@ function initDatabase() {
       health TEXT DEFAULT '',
       location TEXT DEFAULT '',
       description TEXT DEFAULT '',
+      images TEXT DEFAULT '[]',
       publisher_id TEXT NOT NULL,
       created_at TEXT NOT NULL,
       FOREIGN KEY (publisher_id) REFERENCES users(id)
@@ -79,6 +87,7 @@ function initDatabase() {
       id TEXT PRIMARY KEY,
       author_id TEXT NOT NULL,
       content TEXT NOT NULL,
+      images TEXT DEFAULT '[]',
       created_at TEXT NOT NULL,
       FOREIGN KEY (author_id) REFERENCES users(id)
     );
@@ -112,6 +121,9 @@ function initDatabase() {
     );
   `)
 
+  ensureColumn('pets', 'images', "TEXT DEFAULT '[]'")
+  ensureColumn('posts', 'images', "TEXT DEFAULT '[]'")
+
   const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get().count
   if (userCount > 0) return
 
@@ -127,16 +139,16 @@ function initDatabase() {
   `).run('u_rescue', '暖宠志愿者', '13900000000', '123456', '深圳', '长期参与流浪动物救助。', '救助经验 2 年', createdAt)
 
   db.prepare(`
-    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, publisher_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('p_1001', '小橘', '猫咪', '约 8 个月', '男孩', '广州', '待领养', '亲人，会蹭手，已做基础驱虫。', '已驱虫，精神状态良好', '广州市天河区救助点', '性格亲人，会主动靠近人，适合有耐心、能接受适应期的家庭领养。', 'u_rescue', createdAt)
+    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('p_1001', '小橘', '猫咪', '约 8 个月', '男孩', '广州', '待领养', '亲人，会蹭手，已做基础驱虫。', '已驱虫，精神状态良好', '广州市天河区救助点', '性格亲人，会主动靠近人，适合有耐心、能接受适应期的家庭领养。', '[]', 'u_rescue', createdAt)
 
   db.prepare(`
-    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, publisher_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('p_1002', '豆豆', '狗狗', '约 1 岁', '女孩', '深圳', '急需救助', '性格温顺，暂住救助点。', '食欲正常，待进一步体检', '深圳市南山区临时安置点', '被志愿者发现后临时安置，亲人不护食，希望找到稳定照顾人。', 'u_demo', createdAt)
+    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run('p_1002', '豆豆', '狗狗', '约 1 岁', '女孩', '深圳', '急需救助', '性格温顺，暂住救助点。', '食欲正常，待进一步体检', '深圳市南山区临时安置点', '被志愿者发现后临时安置，亲人不护食，希望找到稳定照顾人。', '[]', 'u_demo', createdAt)
 
-  db.prepare('INSERT INTO posts (id, author_id, content, created_at) VALUES (?, ?, ?, ?)').run('post_1001', 'u_rescue', '救助点新来的小猫已经适应环境，正在寻找稳定领养人。', createdAt)
+  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run('post_1001', 'u_rescue', '救助点新来的小猫已经适应环境，正在寻找稳定领养人。', '[]', createdAt)
   db.prepare('INSERT INTO comments (id, post_id, author_id, content, created_at) VALUES (?, ?, ?, ?, ?)').run('c_1001', 'post_1001', 'u_demo', '希望它早点遇到家。', createdAt)
   db.prepare('INSERT INTO post_likes (post_id, user_id, created_at) VALUES (?, ?, ?)').run('post_1001', 'u_demo', createdAt)
 }

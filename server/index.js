@@ -1,4 +1,4 @@
-const express = require('express')
+﻿const express = require('express')
 const cors = require('cors')
 const { db, initDatabase, makeId, now } = require('./db')
 
@@ -8,7 +8,20 @@ const app = express()
 const port = Number(process.env.PORT || 3000)
 
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '5mb' }))
+
+function parseImages(value) {
+  try {
+    const parsed = JSON.parse(value || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch (error) {
+    return []
+  }
+}
+
+function stringifyImages(images) {
+  return JSON.stringify(Array.isArray(images) ? images : [])
+}
 
 function publicUser(user) {
   if (!user) return null
@@ -21,8 +34,8 @@ function getUserById(id) {
 }
 
 function getCurrentUser(req) {
-  const userId = req.headers['x-user-id'] || 'u_demo'
-  return getUserById(userId) || getUserById('u_demo')
+  const userId = req.headers['x-user-id']
+  return userId ? getUserById(userId) : null
 }
 
 function requireUser(req, res, next) {
@@ -48,6 +61,7 @@ function petRow(row) {
     health: row.health,
     location: row.location,
     desc: row.description,
+    images: parseImages(row.images),
     publisherId: row.publisher_id,
     publisher: row.publisher,
     createdAt: row.created_at
@@ -97,6 +111,7 @@ function getPost(id, userId) {
     authorId: post.author_id,
     author: post.author,
     content: post.content,
+    images: parseImages(post.images),
     createdAt: post.created_at,
     likes,
     favorites,
@@ -177,7 +192,7 @@ app.get('/api/pets/mine/list', requireUser, (req, res) => {
   res.json({ pets: rows.map(petRow) })
 })
 
-app.get('/api/pets/:id', requireUser, (req, res) => {
+app.get('/api/pets/:id', (req, res) => {
   const row = db.prepare(`
     SELECT pets.*, users.nickname AS publisher
     FROM pets
@@ -188,23 +203,40 @@ app.get('/api/pets/:id', requireUser, (req, res) => {
     res.status(404).json({ message: '宠物不存在' })
     return
   }
-  const favorited = Boolean(db.prepare('SELECT 1 FROM pet_favorites WHERE user_id = ? AND pet_id = ?').get(req.user.id, row.id))
+  const user = getCurrentUser(req)
+  const favorited = user ? Boolean(db.prepare('SELECT 1 FROM pet_favorites WHERE user_id = ? AND pet_id = ?').get(user.id, row.id)) : false
   res.json({ pet: { ...petRow(row), favorited } })
 })
 
 app.post('/api/pets', requireUser, (req, res) => {
-  const { name, type, age, gender, city, status, note, health, location, desc } = req.body
-  if (!name || !type) {
-    res.status(400).json({ message: '宠物名称和类型不能为空' })
+  const { name, type, age, gender, city, status, note, health, location, desc, images } = req.body
+  if (!name || !type || !age || !gender || !city || !note || !health || !location || !desc || !Array.isArray(images) || images.length === 0) {
+    res.status(400).json({ message: '请完整填写宠物信息并至少添加一张图片' })
     return
   }
   const id = makeId('p')
   db.prepare(`
-    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, publisher_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name, type, age || '', gender || '', city || '', status || '待领养', note || '', health || '', location || '', desc || '', req.user.id, now())
+    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name, type, age, gender, city, status || '待领养', note, health, location, desc, stringifyImages(images), req.user.id, now())
   const pet = db.prepare('SELECT pets.*, users.nickname AS publisher FROM pets JOIN users ON users.id = pets.publisher_id WHERE pets.id = ?').get(id)
   res.status(201).json({ pet: petRow(pet) })
+})
+
+app.delete('/api/pets/:id', requireUser, (req, res) => {
+  const pet = db.prepare('SELECT * FROM pets WHERE id = ?').get(req.params.id)
+  if (!pet) {
+    res.status(404).json({ message: '宠物不存在' })
+    return
+  }
+  if (pet.publisher_id !== req.user.id) {
+    res.status(403).json({ message: '只能删除自己发布的宠物' })
+    return
+  }
+  db.prepare('DELETE FROM pet_favorites WHERE pet_id = ?').run(req.params.id)
+  db.prepare('DELETE FROM applications WHERE pet_id = ?').run(req.params.id)
+  db.prepare('DELETE FROM pets WHERE id = ?').run(req.params.id)
+  res.json({ message: '已删除发布' })
 })
 
 app.put('/api/pets/:id/status', requireUser, (req, res) => {
@@ -229,11 +261,28 @@ app.post('/api/applications', requireUser, (req, res) => {
     res.status(404).json({ message: '宠物不存在' })
     return
   }
+  if (pet.publisher_id === req.user.id) {
+    res.status(400).json({ message: '不能申请自己发布的宠物' })
+    return
+  }
+  if (pet.status === '已领养') {
+    res.status(400).json({ message: '该宠物已被领养' })
+    return
+  }
+  if (!home || !experience || !contact || !reason) {
+    res.status(400).json({ message: '请完整填写申请信息' })
+    return
+  }
+  const exists = db.prepare('SELECT id FROM applications WHERE pet_id = ? AND applicant_id = ? AND status = ?').get(petId, req.user.id, '审核中')
+  if (exists) {
+    res.status(409).json({ message: '你已经提交过审核中的申请' })
+    return
+  }
   const id = makeId('a')
   db.prepare(`
     INSERT INTO applications (id, pet_id, applicant_id, publisher_id, home, experience, contact, reason, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, petId, req.user.id, pet.publisher_id, home || '', experience || '', contact || '', reason || '', '审核中', now())
+  `).run(id, petId, req.user.id, pet.publisher_id, home, experience, contact, reason, '审核中', now())
   res.status(201).json({ applicationId: id })
 })
 
@@ -278,6 +327,11 @@ app.put('/api/applications/:id/review', requireUser, (req, res) => {
     res.status(403).json({ message: '只能审核自己收到的申请' })
     return
   }
+  const pet = db.prepare('SELECT * FROM pets WHERE id = ?').get(application.pet_id)
+  if (status === '已通过' && pet.status === '已领养') {
+    res.status(400).json({ message: '该宠物已被领养' })
+    return
+  }
   db.prepare('UPDATE applications SET status = ? WHERE id = ?').run(status, req.params.id)
   if (status === '已通过') db.prepare('UPDATE pets SET status = ? WHERE id = ?').run('已领养', application.pet_id)
   res.json({ message: '审核完成' })
@@ -308,17 +362,19 @@ app.get('/api/favorites', requireUser, (req, res) => {
     JOIN posts ON posts.id = post_favorites.post_id
     JOIN users ON users.id = posts.author_id
     WHERE post_favorites.user_id = ?
-  `).all(req.user.id)
+  `).all(req.user.id).map((post) => ({ ...post, images: parseImages(post.images) }))
   res.json({ pets, posts })
 })
 
-app.get('/api/posts', requireUser, (req, res) => {
+app.get('/api/posts', (req, res) => {
+  const user = getCurrentUser(req)
   const rows = db.prepare('SELECT id FROM posts ORDER BY created_at DESC').all()
-  res.json({ posts: rows.map((row) => getPost(row.id, req.user.id)) })
+  res.json({ posts: rows.map((row) => getPost(row.id, user ? user.id : '')) })
 })
 
-app.get('/api/posts/:id', requireUser, (req, res) => {
-  const post = getPost(req.params.id, req.user.id)
+app.get('/api/posts/:id', (req, res) => {
+  const user = getCurrentUser(req)
+  const post = getPost(req.params.id, user ? user.id : '')
   if (!post) {
     res.status(404).json({ message: '动态不存在' })
     return
@@ -327,13 +383,13 @@ app.get('/api/posts/:id', requireUser, (req, res) => {
 })
 
 app.post('/api/posts', requireUser, (req, res) => {
-  const { content } = req.body
-  if (!content) {
-    res.status(400).json({ message: '动态内容不能为空' })
+  const { content, images } = req.body
+  if (!content || !Array.isArray(images) || images.length === 0) {
+    res.status(400).json({ message: '请填写动态内容并至少添加一张图片' })
     return
   }
   const id = makeId('post')
-  db.prepare('INSERT INTO posts (id, author_id, content, created_at) VALUES (?, ?, ?, ?)').run(id, req.user.id, content, now())
+  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run(id, req.user.id, content, stringifyImages(images), now())
   res.status(201).json({ post: getPost(id, req.user.id) })
 })
 

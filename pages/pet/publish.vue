@@ -16,6 +16,21 @@
       <view class="field"><text>卡片简介</text><input v-model="form.note" placeholder="首页卡片展示的一句话" /></view>
       <view class="field"><text>详细描述</text><textarea v-model="form.desc" placeholder="描述性格、救助情况和领养要求" /></view>
 
+      <view class="field">
+        <text>宠物图片</text>
+        <view class="image-grid">
+          <view v-for="(image, index) in form.images" :key="image" class="image-item">
+            <image :src="image" mode="aspectFill" />
+            <button class="remove-image" @click="removeImage(index)">×</button>
+          </view>
+          <button v-if="form.images.length < 9" class="add-image" @click="chooseImages">
+            <text>+</text>
+            <text>添加图片</text>
+          </button>
+        </view>
+        <text class="image-tip">至少添加 1 张，最多 9 张；首页展示第一张，详情页展示全部图片。</text>
+      </view>
+
       <button class="primary-btn" @click="submit">发布</button>
     </view>
   </view>
@@ -27,13 +42,42 @@ import { api } from '../../common/api.js'
 export default {
   data() {
     return {
-      form: { name: '', type: '', age: '', gender: '', city: '', location: '', health: '', note: '', desc: '' }
+      form: { name: '', type: '', age: '', gender: '', city: '', location: '', health: '', note: '', desc: '', images: [] }
     }
   },
   methods: {
+    chooseImages() {
+      uni.chooseImage({
+        count: 9 - this.form.images.length,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          this.form.images = this.form.images.concat(res.tempFilePaths || []).slice(0, 9)
+        }
+      })
+    },
+    removeImage(index) {
+      this.form.images.splice(index, 1)
+    },
     async submit() {
-      if (!this.form.name.trim()) {
-        uni.showToast({ title: '请填写宠物名称', icon: 'none' })
+      const required = [
+        ['name', '请填写宠物名称'],
+        ['type', '请填写宠物类型'],
+        ['age', '请填写宠物年龄'],
+        ['gender', '请填写宠物性别'],
+        ['city', '请填写所在城市'],
+        ['location', '请填写救助地点'],
+        ['health', '请填写健康状态'],
+        ['note', '请填写卡片简介'],
+        ['desc', '请填写详细描述']
+      ]
+      const missing = required.find(([key]) => !String(this.form[key]).trim())
+      if (missing) {
+        uni.showToast({ title: missing[1], icon: 'none' })
+        return
+      }
+      if (!this.form.images.length) {
+        uni.showToast({ title: '请至少添加一张宠物图片', icon: 'none' })
         return
       }
       const data = await api.createPet(this.form)
@@ -55,4 +99,11 @@ export default {
 .field text { display: block; margin-bottom: 12rpx; color: #5f554d; font-size: 26rpx; font-weight: 700; }
 .field input, .field textarea { width: 100%; min-height: 88rpx; padding: 22rpx 24rpx; border-radius: 22rpx; background: #f8f6f1; font-size: 28rpx; }
 .field textarea { height: 190rpx; }
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; }
+.image-item, .add-image { position: relative; width: 100%; aspect-ratio: 1; border-radius: 20rpx; overflow: hidden; background: #f8f6f1; }
+.image-item image { width: 100%; height: 100%; }
+.remove-image { position: absolute; top: 8rpx; right: 8rpx; width: 44rpx; height: 44rpx; border-radius: 50%; background: rgba(47, 42, 37, 0.72); color: #fff; font-size: 28rpx; line-height: 42rpx; }
+.add-image { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx dashed #e5d8c8; color: #9d9489; font-size: 24rpx; }
+.add-image text:first-child { margin-bottom: 4rpx; color: #f08a5d; font-size: 46rpx; line-height: 1; }
+.image-tip { display: block; margin-top: 12rpx; color: #9d9489; font-size: 23rpx; line-height: 1.45; }
 </style>

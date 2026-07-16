@@ -11,7 +11,9 @@
         </view>
 
         <text class="content">{{ post.content }}</text>
-        <view class="image-box">动态图片占位</view>
+        <view v-if="post.images && post.images.length" class="image-grid" :class="{ single: post.images.length === 1 }">
+          <image v-for="image in post.images" :key="image" :src="image" mode="aspectFill" />
+        </view>
 
         <view class="action-row">
           <button :class="{ active: liked }" @click="toggleLike">点赞 {{ post.likes.length }}</button>
@@ -41,7 +43,7 @@
 </template>
 
 <script>
-import { api, getLocalUser } from '../../common/api.js'
+import { api, getLocalUser, isLoggedIn } from '../../common/api.js'
 
 export default {
   data() {
@@ -55,7 +57,7 @@ export default {
   },
   methods: {
     async loadData() {
-      const user = getLocalUser() || { id: 'u_demo' }
+      const user = getLocalUser() || {}
       this.userId = user.id
       const data = await api.getPost(this.id)
       this.post = data.post
@@ -65,16 +67,19 @@ export default {
       }
     },
     async toggleLike() {
+      if (!this.requireLogin()) return
       await api.togglePostLike(this.id)
       await this.loadData()
     },
     async toggleFavorite() {
+      if (!this.requireLogin()) return
       const data = await api.togglePostFavorite(this.id)
       await this.loadData()
       const favorited = data.favorited
       uni.showToast({ title: favorited ? '已收藏' : '已取消', icon: 'none' })
     },
     async sendComment() {
+      if (!this.requireLogin()) return
       const content = this.newComment.trim()
       if (!content) return
       await api.createComment(this.id, { content })
@@ -82,9 +87,16 @@ export default {
       await this.loadData()
     },
     async deleteComment(commentId) {
+      if (!this.requireLogin()) return
       await api.deleteComment(this.id, commentId)
       await this.loadData()
       uni.showToast({ title: '已删除', icon: 'none' })
+    },
+    requireLogin() {
+      if (isLoggedIn()) return true
+      uni.showToast({ title: '请先登录后操作', icon: 'none' })
+      setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+      return false
     }
   }
 }
@@ -98,7 +110,10 @@ export default {
 .author { color: #2f2a25; font-size: 29rpx; font-weight: 800; }
 .time { margin-top: 6rpx; color: #9d9489; font-size: 23rpx; }
 .content { color: #3c352f; font-size: 29rpx; line-height: 1.6; }
-.image-box { display: flex; align-items: center; justify-content: center; height: 280rpx; margin: 20rpx 0; border-radius: 24rpx; background: #f4eee4; color: #a69a8d; font-size: 26rpx; }
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8rpx; margin: 20rpx 0; }
+.image-grid image { width: 100%; aspect-ratio: 1; border-radius: 12rpx; background: #f4eee4; }
+.image-grid.single { grid-template-columns: 460rpx; }
+.image-grid.single image { aspect-ratio: 4 / 3; border-radius: 18rpx; }
 .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
 .action-row button { height: 66rpx; border-radius: 999rpx; background: #f8f6f1; color: #74695d; font-size: 25rpx; line-height: 66rpx; }
 .action-row button.active { background: #fff0e8; color: #f08a5d; }

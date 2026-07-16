@@ -3,7 +3,7 @@ const TOKEN_KEY = 'warmPetToken'
 const USER_KEY = 'warmPetUserInfo'
 
 function getToken() {
-  return uni.getStorageSync(TOKEN_KEY) || 'u_demo'
+  return uni.getStorageSync(TOKEN_KEY) || ''
 }
 
 export function setAuth(token, user) {
@@ -17,6 +17,15 @@ export function getLocalUser() {
   return uni.getStorageSync(USER_KEY) || null
 }
 
+export function isLoggedIn() {
+  return Boolean(getToken())
+}
+
+export function clearAuth() {
+  uni.removeStorageSync(TOKEN_KEY)
+  uni.removeStorageSync(USER_KEY)
+}
+
 export function request(options) {
   return new Promise((resolve, reject) => {
     uni.request({
@@ -25,7 +34,7 @@ export function request(options) {
       data: options.data || {},
       header: {
         'content-type': 'application/json',
-        'x-user-id': getToken(),
+        ...(getToken() ? { 'x-user-id': getToken() } : {}),
         ...(options.header || {})
       },
       success(res) {
@@ -73,6 +82,9 @@ export const api = {
   },
   getMyPets() {
     return request({ url: '/api/pets/mine/list' })
+  },
+  deletePet(id) {
+    return request({ url: `/api/pets/${id}`, method: 'DELETE' })
   },
   favoritePet(id) {
     return request({ url: `/api/favorites/pets/${id}`, method: 'POST' })

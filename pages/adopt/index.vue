@@ -43,7 +43,8 @@
 
     <view v-if="filteredPets.length" class="pet-grid">
       <view v-for="pet in filteredPets" :key="pet.id" class="pet-card" @click="goDetail(pet.id)">
-        <view class="pet-cover">
+        <image v-if="coverImage(pet)" class="pet-cover image-cover" :src="coverImage(pet)" mode="aspectFill" />
+        <view v-else class="pet-cover">
           <text>{{ pet.type }}</text>
         </view>
         <view class="pet-info">
@@ -97,6 +98,9 @@ export default {
       const data = await api.getPets()
       this.pets = data.pets || []
     },
+    coverImage(pet) {
+      return pet.images && pet.images.length ? pet.images[0] : ''
+    },
     goDetail(id) {
       uni.navigateTo({ url: `/pages/pet/detail?id=${id}` })
     },
@@ -129,6 +133,7 @@ export default {
 .pet-grid { display: grid; grid-template-columns: 1fr; gap: 22rpx; }
 .pet-card { display: flex; padding: 18rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
 .pet-cover { display: flex; align-items: center; justify-content: center; width: 180rpx; height: 180rpx; flex-shrink: 0; border-radius: 24rpx; background: #f2eadf; color: #9b6227; font-size: 28rpx; font-weight: 700; }
+.image-cover { display: block; object-fit: cover; }
 .pet-info { flex: 1; min-width: 0; padding: 6rpx 0 6rpx 22rpx; }
 .pet-top { display: flex; align-items: center; justify-content: space-between; gap: 14rpx; margin-bottom: 14rpx; }
 .pet-name { color: #2f2a25; font-size: 32rpx; font-weight: 800; }

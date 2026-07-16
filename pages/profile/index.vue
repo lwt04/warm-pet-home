@@ -6,13 +6,19 @@
         <text class="nickname">{{ userInfo.nickname }}</text>
         <text class="profile-desc">{{ userInfo.city }} · {{ userInfo.experience }}</text>
       </view>
-      <button class="edit-btn" @click="go('/pages/user/edit')">编辑</button>
+      <button v-if="loggedIn" class="edit-btn" @click="go('/pages/user/edit')">编辑</button>
     </view>
 
-    <view class="auth-row">
+    <view v-if="!loggedIn" class="login-tip">
+      <text>登录后可以发布救助、申请领养、收藏宠物和管理动态。</text>
+    </view>
+
+    <view v-if="!loggedIn" class="auth-row">
       <button class="ghost-btn" @click="go('/pages/user/login')">登录</button>
       <button class="primary-btn mini" @click="go('/pages/user/register')">注册</button>
     </view>
+
+    <button v-else class="logout-btn" @click="logout">退出登录</button>
 
     <view class="menu-grid">
       <view v-for="item in menus" :key="item.title" class="menu-item" @click="go(item.url)">
@@ -24,15 +30,16 @@
 </template>
 
 <script>
-import { api, getLocalUser, setAuth } from '../../common/api.js'
+import { api, clearAuth, getLocalUser, isLoggedIn, setAuth } from '../../common/api.js'
 
 export default {
   data() {
     return {
+      loggedIn: isLoggedIn(),
       userInfo: getLocalUser() || {
-        nickname: '暖宠用户',
-        city: '广州',
-        experience: '有基础养宠经验'
+        nickname: '未登录',
+        city: '请先登录或注册',
+        experience: '登录后完善资料'
       },
       menus: [
         { title: '发布救助', desc: '录入待领养宠物', url: '/pages/pet/publish' },
@@ -50,7 +57,16 @@ export default {
     avatarText() { return (this.userInfo.nickname || '暖').slice(0, 1) }
   },
   onShow() {
-    this.loadUser()
+    this.loggedIn = isLoggedIn()
+    if (this.loggedIn) {
+      this.loadUser()
+    } else {
+      this.userInfo = {
+        nickname: '未登录',
+        city: '请先登录或注册',
+        experience: '登录后完善资料'
+      }
+    }
   },
   methods: {
     async loadUser() {
@@ -58,7 +74,25 @@ export default {
       this.userInfo = data.user
       setAuth(data.user.id, data.user)
     },
-    go(url) { uni.navigateTo({ url }) }
+    logout() {
+      clearAuth()
+      this.loggedIn = false
+      this.userInfo = {
+        nickname: '未登录',
+        city: '请先登录或注册',
+        experience: '登录后完善资料'
+      }
+      uni.showToast({ title: '已退出登录', icon: 'none' })
+    },
+    go(url) {
+      const publicPages = ['/pages/user/login', '/pages/user/register']
+      if (!this.loggedIn && !publicPages.includes(url)) {
+        uni.showToast({ title: '请先登录或注册', icon: 'none' })
+        setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+        return
+      }
+      uni.navigateTo({ url })
+    }
   }
 }
 </script>
@@ -72,6 +106,8 @@ export default {
 .edit-btn { width: 112rpx; height: 64rpx; border-radius: 18rpx; background: #f8f6f1; color: #74695d; font-size: 26rpx; line-height: 64rpx; }
 .auth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; margin-bottom: 22rpx; }
 .auth-row .mini { height: 76rpx; line-height: 76rpx; font-size: 28rpx; }
+.login-tip { padding: 22rpx 26rpx; margin-bottom: 18rpx; border-radius: 24rpx; background: #fff7ed; color: #9b6227; font-size: 26rpx; line-height: 1.5; }
+.logout-btn { height: 76rpx; margin-bottom: 22rpx; border-radius: 22rpx; background: #fff0e8; color: #f08a5d; font-size: 28rpx; line-height: 76rpx; }
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; }
 .menu-item { min-height: 154rpx; padding: 24rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
 .menu-title { display: block; margin-bottom: 12rpx; color: #2f2a25; font-size: 29rpx; font-weight: 800; }
