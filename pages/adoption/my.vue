@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { getMyApplications } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
@@ -33,9 +33,13 @@ export default {
     }
   },
   onShow() {
-    this.list = getMyApplications()
+    this.loadData()
   },
   methods: {
+    async loadData() {
+      const data = await api.getMyApplications()
+      this.list = data.applications || []
+    },
     statusClass(status) {
       return status === '已通过' ? 'approved' : status === '已拒绝' ? 'rejected' : 'pending'
     }

@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import { getPetById, isPetFavorited, togglePetFavorite } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
@@ -47,13 +47,23 @@ export default {
     this.id = options.id || ''
   },
   onShow() {
-    this.pet = getPetById(this.id)
-    this.favorited = this.pet ? isPetFavorited(this.pet.id) : false
+    this.loadPet()
   },
   methods: {
-    toggleFavorite() {
+    async loadPet() {
+      const data = await api.getPet(this.id)
+      this.pet = data.pet
+      this.favorited = Boolean(data.pet && data.pet.favorited)
+    },
+    async toggleFavorite() {
       if (!this.pet) return
-      this.favorited = togglePetFavorite(this.pet.id)
+      if (this.favorited) {
+        await api.unfavoritePet(this.pet.id)
+        this.favorited = false
+      } else {
+        await api.favoritePet(this.pet.id)
+        this.favorited = true
+      }
       uni.showToast({ title: this.favorited ? '已收藏' : '已取消收藏', icon: 'none' })
     },
     apply() {

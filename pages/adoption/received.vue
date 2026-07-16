@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { getReceivedApplications, reviewApplication } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
@@ -40,10 +40,13 @@ export default {
     this.loadData()
   },
   methods: {
-    loadData() { this.applications = getReceivedApplications() },
-    review(id, status) {
-      reviewApplication(id, status)
-      this.loadData()
+    async loadData() {
+      const data = await api.getReceivedApplications()
+      this.applications = data.applications || []
+    },
+    async review(id, status) {
+      await api.reviewApplication(id, status)
+      await this.loadData()
       uni.showToast({ title: status, icon: 'none' })
     }
   }

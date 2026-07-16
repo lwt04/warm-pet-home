@@ -1,10 +1,6 @@
-﻿<script>
-import { ensureSeedData } from './common/storage.js'
-
+<script>
 export default {
-  onLaunch() {
-    ensureSeedData()
-  }
+  onLaunch() {}
 }
 </script>
 

@@ -12,13 +12,18 @@
 </template>
 
 <script>
-import { saveCurrentUser } from '../../common/storage.js'
+import { api, setAuth } from '../../common/api.js'
 
 export default {
   data() { return { form: { nickname: '', phone: '', password: '' } } },
   methods: {
-    register() {
-      saveCurrentUser({ id: `u_${Date.now()}`, nickname: this.form.nickname || '新用户', phone: this.form.phone, city: '待完善', bio: '这个人还没有填写简介。', experience: '待完善' })
+    async register() {
+      const data = await api.register({
+        nickname: this.form.nickname || '新用户',
+        phone: this.form.phone,
+        password: this.form.password
+      })
+      setAuth(data.token, data.user)
       uni.showToast({ title: '注册成功', icon: 'success' })
       setTimeout(() => uni.switchTab({ url: '/pages/profile/index' }), 500)
     }

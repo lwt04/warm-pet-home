@@ -9,13 +9,17 @@
 </template>
 
 <script>
-import { getMyApplications, getReceivedApplications } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() { return { messages: [] } },
-  onShow() {
-    const received = getReceivedApplications().map((item) => ({ id: `r_${item.id}`, title: '新的领养申请', content: `${item.applicant} 申请领养 ${item.petName}。`, time: item.createdAt }))
-    const mine = getMyApplications().map((item) => ({ id: `m_${item.id}`, title: '申请状态更新', content: `你对 ${item.petName} 的申请状态：${item.status}。`, time: item.createdAt }))
+  async onShow() {
+    const [receivedData, mineData] = await Promise.all([
+      api.getReceivedApplications(),
+      api.getMyApplications()
+    ])
+    const received = (receivedData.applications || []).map((item) => ({ id: `r_${item.id}`, title: '新的领养申请', content: `${item.applicant} 申请领养 ${item.petName}。`, time: item.createdAt }))
+    const mine = (mineData.applications || []).map((item) => ({ id: `m_${item.id}`, title: '申请状态更新', content: `你对 ${item.petName} 的申请状态：${item.status}。`, time: item.createdAt }))
     this.messages = [...received, ...mine]
   }
 }

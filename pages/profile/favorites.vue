@@ -14,21 +14,22 @@
 </template>
 
 <script>
-import { getFavoritePets, getFavoritePosts, togglePetFavorite, togglePostFavorite } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() { return { items: [] } },
   onShow() { this.loadData() },
   methods: {
-    loadData() {
-      const pets = getFavoritePets().map((pet) => ({ key: `pet_${pet.id}`, id: pet.id, source: 'pet', title: pet.name, type: '宠物', remark: `${pet.city} · ${pet.status}` }))
-      const posts = getFavoritePosts().map((post) => ({ key: `post_${post.id}`, id: post.id, source: 'post', title: post.author, type: '动态', remark: post.content }))
+    async loadData() {
+      const data = await api.getFavorites()
+      const pets = (data.pets || []).map((pet) => ({ key: `pet_${pet.id}`, id: pet.id, source: 'pet', title: pet.name, type: '宠物', remark: `${pet.city} · ${pet.status}` }))
+      const posts = (data.posts || []).map((post) => ({ key: `post_${post.id}`, id: post.id, source: 'post', title: post.author, type: '动态', remark: post.content }))
       this.items = [...pets, ...posts]
     },
-    remove(item) {
-      if (item.source === 'pet') togglePetFavorite(item.id)
-      if (item.source === 'post') togglePostFavorite(item.id)
-      this.loadData()
+    async remove(item) {
+      if (item.source === 'pet') await api.unfavoritePet(item.id)
+      if (item.source === 'post') await api.togglePostFavorite(item.id)
+      await this.loadData()
       uni.showToast({ title: '已取消收藏', icon: 'none' })
     }
   }

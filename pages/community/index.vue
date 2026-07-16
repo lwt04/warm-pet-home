@@ -30,25 +30,28 @@
 </template>
 
 <script>
-import { getCurrentUser, getPosts, togglePostFavorite, togglePostLike } from '../../common/storage.js'
+import { api, getLocalUser } from '../../common/api.js'
 
 export default {
   data() { return { posts: [], userId: '' } },
   onShow() { this.loadData() },
   methods: {
-    loadData() {
-      this.userId = getCurrentUser().id
-      this.posts = getPosts()
+    async loadData() {
+      const user = getLocalUser() || { id: 'u_demo' }
+      this.userId = user.id
+      const data = await api.getPosts()
+      this.posts = data.posts || []
     },
     isLiked(post) { return post.likes.includes(this.userId) },
     isFavorited(post) { return post.favorites.includes(this.userId) },
-    like(id) {
-      togglePostLike(id)
-      this.loadData()
+    async like(id) {
+      await api.togglePostLike(id)
+      await this.loadData()
     },
-    favorite(id) {
-      const favorited = togglePostFavorite(id)
-      this.loadData()
+    async favorite(id) {
+      const data = await api.togglePostFavorite(id)
+      await this.loadData()
+      const favorited = data.favorited
       uni.showToast({ title: favorited ? '已收藏' : '已取消', icon: 'none' })
     },
     goPublish() { uni.navigateTo({ url: '/pages/post/publish' }) },

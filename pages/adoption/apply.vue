@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { addApplication, getCurrentUser, getPetById } from '../../common/storage.js'
+import { api, getLocalUser } from '../../common/api.js'
 
 export default {
   data() {
@@ -27,14 +27,18 @@ export default {
   },
   onLoad(options) {
     this.petId = options.petId || ''
-    const pet = getPetById(this.petId)
-    if (pet) this.petName = pet.name
-    const user = getCurrentUser()
+    this.loadPet()
+    const user = getLocalUser() || {}
     this.form.contact = user.phone || ''
     this.form.experience = user.experience || ''
   },
   methods: {
-    submit() {
+    async loadPet() {
+      if (!this.petId) return
+      const data = await api.getPet(this.petId)
+      if (data.pet) this.petName = data.pet.name
+    },
+    async submit() {
       if (!this.petId) {
         uni.showToast({ title: '缺少宠物信息', icon: 'none' })
         return
@@ -43,7 +47,7 @@ export default {
         uni.showToast({ title: '请填写联系方式和申请理由', icon: 'none' })
         return
       }
-      addApplication({ ...this.form, petId: this.petId })
+      await api.createApplication({ ...this.form, petId: this.petId })
       uni.showToast({ title: '申请已提交', icon: 'success' })
       setTimeout(() => {
         uni.navigateTo({ url: '/pages/adoption/my' })

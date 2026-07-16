@@ -14,14 +14,19 @@
 </template>
 
 <script>
-import { getCurrentUser, saveCurrentUser } from '../../common/storage.js'
+import { api, setAuth } from '../../common/api.js'
 
 export default {
   data() { return { form: { nickname: '', city: '', phone: '', experience: '', bio: '' } } },
-  onLoad() { this.form = { ...this.form, ...getCurrentUser() } },
+  onLoad() { this.loadData() },
   methods: {
-    save() {
-      saveCurrentUser(this.form)
+    async loadData() {
+      const data = await api.getMe()
+      this.form = { ...this.form, ...data.user }
+    },
+    async save() {
+      const data = await api.updateMe(this.form)
+      setAuth(data.user.id, data.user)
       uni.showToast({ title: '已保存', icon: 'success' })
       setTimeout(() => uni.navigateBack(), 500)
     }

@@ -24,12 +24,16 @@
 </template>
 
 <script>
-import { getCurrentUser } from '../../common/storage.js'
+import { api, getLocalUser, setAuth } from '../../common/api.js'
 
 export default {
   data() {
     return {
-      userInfo: getCurrentUser(),
+      userInfo: getLocalUser() || {
+        nickname: '暖宠用户',
+        city: '广州',
+        experience: '有基础养宠经验'
+      },
       menus: [
         { title: '发布救助', desc: '录入待领养宠物', url: '/pages/pet/publish' },
         { title: '我的发布', desc: '管理宠物状态', url: '/pages/pet/my-pets' },
@@ -46,9 +50,14 @@ export default {
     avatarText() { return (this.userInfo.nickname || '暖').slice(0, 1) }
   },
   onShow() {
-    this.userInfo = getCurrentUser()
+    this.loadUser()
   },
   methods: {
+    async loadUser() {
+      const data = await api.getMe()
+      this.userInfo = data.user
+      setAuth(data.user.id, data.user)
+    },
     go(url) { uni.navigateTo({ url }) }
   }
 }

@@ -12,13 +12,17 @@
 </template>
 
 <script>
-import { saveCurrentUser } from '../../common/storage.js'
+import { api, setAuth } from '../../common/api.js'
 
 export default {
   data() { return { form: { account: '', password: '' } } },
   methods: {
-    login() {
-      saveCurrentUser({ id: 'u_demo', nickname: this.form.account || '暖宠用户', phone: this.form.account || '138****8888' })
+    async login() {
+      const data = await api.login({
+        phone: this.form.account || '13800000000',
+        password: this.form.password || '123456'
+      })
+      setAuth(data.token, data.user)
       uni.showToast({ title: '登录成功', icon: 'success' })
       setTimeout(() => uni.switchTab({ url: '/pages/profile/index' }), 500)
     },

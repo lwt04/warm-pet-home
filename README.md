@@ -4,9 +4,9 @@
 
 ## 当前阶段
 
-已完成项目骨架、底部 Tab 页面、主要子页面占位、Tab 图标替换、前端本地数据联动流程，以及 Node.js / Express / SQLite 后端骨架。
+已完成项目骨架、底部 Tab 页面、主要子页面占位、Tab 图标替换、前端本地数据联动流程、Node.js / Express / SQLite 后端骨架，并已将主要前端页面接入后端 API。
 
-当前数据暂时使用 `uni.setStorageSync` / `uni.getStorageSync` 保存在本地，后续会替换为 Node.js/Express 后端接口和数据库。
+当前主要数据来自本地运行的后端服务：`http://localhost:3000`。登录状态会在前端本地保存用户 ID，用于后续接口请求。
 
 ## 已完成功能
 
@@ -22,6 +22,7 @@
 - Node.js / Express 后端服务
 - SQLite 数据库初始化与种子数据
 - 用户、宠物、申请、收藏、宠物圈等 API 接口
+- 前端页面接入后端 API：宠物列表、详情、发布、申请、审核、收藏、动态、评论等
 - API 文档：`docs/api.md`
 
 ## 后端启动
@@ -37,6 +38,22 @@ npm.cmd run server
 ```text
 http://localhost:3000/api/health
 ```
+
+## 前端运行顺序
+
+1. 先启动后端：
+
+```bash
+npm.cmd run server
+```
+
+2. 再在 HBuilder X 中运行前端：
+
+```text
+运行 -> 运行到浏览器
+```
+
+如果前端提示“后端服务未连接”，请先确认 `http://localhost:3000/api/health` 可以正常打开。
 
 ## Tab 图标路径
 
@@ -59,9 +76,10 @@ http://localhost:3000/api/health
 - 2026-07-15：完成 Tab 图标替换和前端本地数据联动流程
 - 2026-07-16：更新 README，补充项目进度和已完成功能说明
 - 2026-07-16：完成 Express + SQLite 后端骨架和 API 文档
+- 2026-07-16：将主要前端页面接入后端 API
 
 ## 下一步计划
 
-- 将本地缓存数据替换为后端 API 请求
 - 继续完善页面样式、表单校验和异常提示
+- 补充图片上传或图片占位优化
 - 补充 API 文档、Prompt 日志、Code Review 报告和项目演示材料

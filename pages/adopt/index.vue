@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import { getPets } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
@@ -90,9 +90,13 @@ export default {
     }
   },
   onShow() {
-    this.pets = getPets()
+    this.loadPets()
   },
   methods: {
+    async loadPets() {
+      const data = await api.getPets()
+      this.pets = data.pets || []
+    },
     goDetail(id) {
       uni.navigateTo({ url: `/pages/pet/detail?id=${id}` })
     },

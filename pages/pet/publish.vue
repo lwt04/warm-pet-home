@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { addPet } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
@@ -31,15 +31,15 @@ export default {
     }
   },
   methods: {
-    submit() {
+    async submit() {
       if (!this.form.name.trim()) {
         uni.showToast({ title: '请填写宠物名称', icon: 'none' })
         return
       }
-      const pet = addPet(this.form)
+      const data = await api.createPet(this.form)
       uni.showToast({ title: '发布成功', icon: 'success' })
       setTimeout(() => {
-        uni.navigateTo({ url: `/pages/pet/detail?id=${pet.id}` })
+        uni.navigateTo({ url: `/pages/pet/detail?id=${data.pet.id}` })
       }, 500)
     }
   }

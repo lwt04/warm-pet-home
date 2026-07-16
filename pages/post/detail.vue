@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { addComment, getCurrentUser, getPostById, removeComment, togglePostFavorite, togglePostLike } from '../../common/storage.js'
+import { api, getLocalUser } from '../../common/api.js'
 
 export default {
   data() {
@@ -54,34 +54,36 @@ export default {
     this.loadData()
   },
   methods: {
-    loadData() {
-      const user = getCurrentUser()
+    async loadData() {
+      const user = getLocalUser() || { id: 'u_demo' }
       this.userId = user.id
-      this.post = getPostById(this.id)
+      const data = await api.getPost(this.id)
+      this.post = data.post
       if (this.post) {
         this.liked = this.post.likes.includes(this.userId)
         this.favorited = this.post.favorites.includes(this.userId)
       }
     },
-    toggleLike() {
-      togglePostLike(this.id)
-      this.loadData()
+    async toggleLike() {
+      await api.togglePostLike(this.id)
+      await this.loadData()
     },
-    toggleFavorite() {
-      const favorited = togglePostFavorite(this.id)
-      this.loadData()
+    async toggleFavorite() {
+      const data = await api.togglePostFavorite(this.id)
+      await this.loadData()
+      const favorited = data.favorited
       uni.showToast({ title: favorited ? '已收藏' : '已取消', icon: 'none' })
     },
-    sendComment() {
+    async sendComment() {
       const content = this.newComment.trim()
       if (!content) return
-      addComment(this.id, content)
+      await api.createComment(this.id, { content })
       this.newComment = ''
-      this.loadData()
+      await this.loadData()
     },
-    deleteComment(commentId) {
-      removeComment(this.id, commentId)
-      this.loadData()
+    async deleteComment(commentId) {
+      await api.deleteComment(this.id, commentId)
+      await this.loadData()
       uni.showToast({ title: '已删除', icon: 'none' })
     }
   }

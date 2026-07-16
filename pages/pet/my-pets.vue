@@ -20,16 +20,20 @@
 </template>
 
 <script>
-import { getMyPets } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() {
     return { pets: [] }
   },
   onShow() {
-    this.pets = getMyPets()
+    this.loadData()
   },
   methods: {
+    async loadData() {
+      const data = await api.getMyPets()
+      this.pets = data.pets || []
+    },
     publish() { uni.navigateTo({ url: '/pages/pet/publish' }) },
     goDetail(id) { uni.navigateTo({ url: `/pages/pet/detail?id=${id}` }) }
   }

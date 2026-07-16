@@ -14,15 +14,19 @@
 </template>
 
 <script>
-import { getLikedPosts, togglePostLike } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() { return { likes: [] } },
-  onShow() { this.likes = getLikedPosts() },
+  onShow() { this.loadData() },
   methods: {
-    remove(id) {
-      togglePostLike(id)
-      this.likes = getLikedPosts()
+    async loadData() {
+      const data = await api.getPosts()
+      this.likes = (data.posts || []).filter((post) => post.liked)
+    },
+    async remove(id) {
+      await api.togglePostLike(id)
+      await this.loadData()
       uni.showToast({ title: '已取消点赞', icon: 'none' })
     }
   }

@@ -11,17 +11,17 @@
 </template>
 
 <script>
-import { addPost } from '../../common/storage.js'
+import { api } from '../../common/api.js'
 
 export default {
   data() { return { content: '' } },
   methods: {
-    submit() {
+    async submit() {
       if (!this.content.trim()) {
         uni.showToast({ title: '请填写动态内容', icon: 'none' })
         return
       }
-      addPost(this.content.trim())
+      await api.createPost({ content: this.content.trim() })
       uni.showToast({ title: '发布成功', icon: 'success' })
       setTimeout(() => uni.switchTab({ url: '/pages/community/index' }), 500)
     }
