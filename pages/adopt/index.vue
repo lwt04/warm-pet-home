@@ -65,14 +65,14 @@
 </template>
 
 <script>
-import { api } from '../../common/api.js'
+import { api, isLoggedIn } from '../../common/api.js'
 
 export default {
   data() {
     return {
       keyword: '',
       currentCategory: '全部',
-      categories: ['全部', '猫咪', '狗狗', '其他', '急需救助'],
+      categories: ['全部', '猫咪', '狗狗', '其他'],
       banners: [
         { title: '领养代替购买', desc: '每一次认真了解，都是一次靠近家的机会。' },
         { title: '发布真实救助信息', desc: '填写地点、健康状态和联系方式，帮助它被看见。' }
@@ -105,6 +105,11 @@ export default {
       uni.navigateTo({ url: `/pages/pet/detail?id=${id}` })
     },
     goPublish() {
+      if (!isLoggedIn()) {
+        uni.showToast({ title: '请先登录后再发布', icon: 'none' })
+        setTimeout(() => uni.navigateTo({ url: '/pages/user/login' }), 500)
+        return
+      }
       uni.navigateTo({ url: '/pages/pet/publish' })
     }
   }

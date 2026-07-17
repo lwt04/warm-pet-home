@@ -39,7 +39,7 @@ const seedPets = [
     age: '约 1 岁',
     gender: '女孩',
     city: '深圳',
-    status: '急需救助',
+    status: '待领养',
     note: '性格温顺，暂住救助点。',
     health: '食欲正常，待进一步体检',
     location: '深圳市南山区临时安置点',

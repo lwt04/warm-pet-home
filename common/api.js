@@ -110,11 +110,17 @@ export const api = {
   getPosts() {
     return request({ url: '/api/posts' })
   },
+  getMyPosts() {
+    return request({ url: '/api/posts/mine/list' })
+  },
   getPost(id) {
     return request({ url: `/api/posts/${id}` })
   },
   createPost(data) {
     return request({ url: '/api/posts', method: 'POST', data })
+  },
+  deletePost(id) {
+    return request({ url: `/api/posts/${id}`, method: 'DELETE' })
   },
   togglePostLike(id) {
     return request({ url: `/api/posts/${id}/like`, method: 'POST' })

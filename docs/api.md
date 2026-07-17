@@ -129,7 +129,9 @@ x-user-id: 用户 id
 |---|---|---|
 | GET | `/api/posts` | 获取宠物圈动态列表，未登录也可查看 |
 | GET | `/api/posts/:id` | 获取动态详情，未登录也可查看 |
+| GET | `/api/posts/mine/list` | 获取我发布的动态 |
 | POST | `/api/posts` | 发布动态 |
+| DELETE | `/api/posts/:id` | 删除自己发布的动态 |
 | POST | `/api/posts/:id/like` | 点赞或取消点赞 |
 | POST | `/api/posts/:id/favorite` | 收藏或取消收藏动态 |
 | POST | `/api/posts/:id/comments` | 发布评论 |

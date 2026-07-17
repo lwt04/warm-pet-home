@@ -1,12 +1,12 @@
 ﻿<template>
   <view class="page">
     <view v-if="likes.length">
-      <view v-for="item in likes" :key="item.id" class="like-card">
+      <view v-for="item in likes" :key="item.id" class="like-card" @click="goDetail(item.id)">
         <view>
           <text class="title">{{ item.author }}</text>
           <text class="desc">{{ item.content }}</text>
         </view>
-        <button @click="remove(item.id)">取消点赞</button>
+        <button @click.stop="remove(item.id)">取消点赞</button>
       </view>
     </view>
     <view v-else class="empty-box">暂无点赞动态</view>
@@ -28,6 +28,9 @@ export default {
       await api.togglePostLike(id)
       await this.loadData()
       uni.showToast({ title: '已取消点赞', icon: 'none' })
+    },
+    goDetail(id) {
+      uni.navigateTo({ url: `/pages/post/detail?id=${id}` })
     }
   }
 }

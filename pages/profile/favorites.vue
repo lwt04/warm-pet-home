@@ -1,12 +1,12 @@
 ﻿<template>
   <view class="page">
     <view v-if="items.length">
-      <view v-for="item in items" :key="item.key" class="favorite-card">
+      <view v-for="item in items" :key="item.key" class="favorite-card" @click="goDetail(item)">
         <view>
           <text class="title">{{ item.title }}</text>
           <text class="desc">{{ item.type }} · {{ item.remark }}</text>
         </view>
-        <button @click="remove(item)">取消收藏</button>
+        <button @click.stop="remove(item)">取消收藏</button>
       </view>
     </view>
     <view v-else class="empty-box">暂无收藏内容</view>
@@ -31,6 +31,13 @@ export default {
       if (item.source === 'post') await api.togglePostFavorite(item.id)
       await this.loadData()
       uni.showToast({ title: '已取消收藏', icon: 'none' })
+    },
+    goDetail(item) {
+      if (item.source === 'pet') {
+        uni.navigateTo({ url: `/pages/pet/detail?id=${item.id}` })
+        return
+      }
+      uni.navigateTo({ url: `/pages/post/detail?id=${item.id}` })
     }
   }
 }

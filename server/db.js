@@ -146,7 +146,7 @@ function initDatabase() {
   db.prepare(`
     INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run('p_1002', '豆豆', '狗狗', '约 1 岁', '女孩', '深圳', '急需救助', '性格温顺，暂住救助点。', '食欲正常，待进一步体检', '深圳市南山区临时安置点', '被志愿者发现后临时安置，亲人不护食，希望找到稳定照顾人。', '[]', 'u_demo', createdAt)
+  `).run('p_1002', '豆豆', '狗狗', '约 1 岁', '女孩', '深圳', '待领养', '性格温顺，暂住救助点。', '食欲正常，待进一步体检', '深圳市南山区临时安置点', '被志愿者发现后临时安置，亲人不护食，希望找到稳定照顾人。', '[]', 'u_demo', createdAt)
 
   db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run('post_1001', 'u_rescue', '救助点新来的小猫已经适应环境，正在寻找稳定领养人。', '[]', createdAt)
   db.prepare('INSERT INTO comments (id, post_id, author_id, content, created_at) VALUES (?, ?, ?, ?, ?)').run('c_1001', 'post_1001', 'u_demo', '希望它早点遇到家。', createdAt)

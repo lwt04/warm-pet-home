@@ -209,7 +209,7 @@ app.get('/api/pets/:id', (req, res) => {
 })
 
 app.post('/api/pets', requireUser, (req, res) => {
-  const { name, type, age, gender, city, status, note, health, location, desc, images } = req.body
+  const { name, type, age, gender, city, note, health, location, desc, images } = req.body
   if (!name || !type || !age || !gender || !city || !note || !health || !location || !desc || !Array.isArray(images) || images.length === 0) {
     res.status(400).json({ message: '请完整填写宠物信息并至少添加一张图片' })
     return
@@ -218,7 +218,7 @@ app.post('/api/pets', requireUser, (req, res) => {
   db.prepare(`
     INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name, type, age, gender, city, status || '待领养', note, health, location, desc, stringifyImages(images), req.user.id, now())
+  `).run(id, name, type, age, gender, city, '待领养', note, health, location, desc, stringifyImages(images), req.user.id, now())
   const pet = db.prepare('SELECT pets.*, users.nickname AS publisher FROM pets JOIN users ON users.id = pets.publisher_id WHERE pets.id = ?').get(id)
   res.status(201).json({ pet: petRow(pet) })
 })
@@ -241,6 +241,10 @@ app.delete('/api/pets/:id', requireUser, (req, res) => {
 
 app.put('/api/pets/:id/status', requireUser, (req, res) => {
   const { status } = req.body
+  if (!['待领养', '已领养'].includes(status)) {
+    res.status(400).json({ message: '宠物状态只能是待领养或已领养' })
+    return
+  }
   const pet = db.prepare('SELECT * FROM pets WHERE id = ?').get(req.params.id)
   if (!pet) {
     res.status(404).json({ message: '宠物不存在' })
@@ -250,7 +254,7 @@ app.put('/api/pets/:id/status', requireUser, (req, res) => {
     res.status(403).json({ message: '只能修改自己发布的宠物' })
     return
   }
-  db.prepare('UPDATE pets SET status = ? WHERE id = ?').run(status || pet.status, req.params.id)
+  db.prepare('UPDATE pets SET status = ? WHERE id = ?').run(status, req.params.id)
   res.json({ message: '状态已更新' })
 })
 
@@ -372,6 +376,11 @@ app.get('/api/posts', (req, res) => {
   res.json({ posts: rows.map((row) => getPost(row.id, user ? user.id : '')) })
 })
 
+app.get('/api/posts/mine/list', requireUser, (req, res) => {
+  const rows = db.prepare('SELECT id FROM posts WHERE author_id = ? ORDER BY created_at DESC').all(req.user.id)
+  res.json({ posts: rows.map((row) => getPost(row.id, req.user.id)) })
+})
+
 app.get('/api/posts/:id', (req, res) => {
   const user = getCurrentUser(req)
   const post = getPost(req.params.id, user ? user.id : '')
@@ -391,6 +400,23 @@ app.post('/api/posts', requireUser, (req, res) => {
   const id = makeId('post')
   db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run(id, req.user.id, content, stringifyImages(images), now())
   res.status(201).json({ post: getPost(id, req.user.id) })
+})
+
+app.delete('/api/posts/:id', requireUser, (req, res) => {
+  const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id)
+  if (!post) {
+    res.status(404).json({ message: '动态不存在' })
+    return
+  }
+  if (post.author_id !== req.user.id) {
+    res.status(403).json({ message: '只能删除自己发布的动态' })
+    return
+  }
+  db.prepare('DELETE FROM comments WHERE post_id = ?').run(req.params.id)
+  db.prepare('DELETE FROM post_likes WHERE post_id = ?').run(req.params.id)
+  db.prepare('DELETE FROM post_favorites WHERE post_id = ?').run(req.params.id)
+  db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id)
+  res.json({ message: '动态已删除' })
 })
 
 app.post('/api/posts/:id/like', requireUser, (req, res) => {
