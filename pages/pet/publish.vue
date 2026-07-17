@@ -38,6 +38,7 @@
 
 <script>
 import { api } from '../../common/api.js'
+import { persistSelectedImages } from '../../common/image.js'
 
 export default {
   data() {
@@ -51,8 +52,9 @@ export default {
         count: 9 - this.form.images.length,
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
-        success: (res) => {
-          this.form.images = this.form.images.concat(res.tempFilePaths || []).slice(0, 9)
+        success: async (res) => {
+          const images = await persistSelectedImages(res.tempFilePaths || [], 9 - this.form.images.length)
+          this.form.images = this.form.images.concat(images).slice(0, 9)
         }
       })
     },

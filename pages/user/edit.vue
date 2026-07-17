@@ -20,6 +20,7 @@
 
 <script>
 import { api, setAuth } from '../../common/api.js'
+import { persistSelectedImages } from '../../common/image.js'
 
 export default {
   data() { return { form: { nickname: '', avatar: '', city: '', phone: '', experience: '', bio: '' } } },
@@ -37,8 +38,9 @@ export default {
         count: 1,
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
-        success: (res) => {
-          const image = res.tempFilePaths && res.tempFilePaths[0]
+        success: async (res) => {
+          const images = await persistSelectedImages(res.tempFilePaths || [], 1)
+          const image = images && images[0]
           if (image) this.form.avatar = image
         }
       })

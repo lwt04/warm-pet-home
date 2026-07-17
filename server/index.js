@@ -19,14 +19,33 @@ function parseImages(value) {
   }
 }
 
+function normalizeAssetPath(value) {
+  if (!value) return ''
+  const text = String(value).replace(/\\/g, '/')
+  if (/^blob:/i.test(text)) return ''
+  if (/^(https?:|data:)/i.test(text)) return text
+  const staticIndex = text.toLowerCase().lastIndexOf('/static/')
+  if (staticIndex !== -1) return text.slice(staticIndex)
+  if (text.startsWith('static/')) return `/${text}`
+  if (text.startsWith('/')) return text
+  return text
+}
+
+function normalizeImageList(images) {
+  return (Array.isArray(images) ? images : []).map(normalizeAssetPath).filter(Boolean)
+}
+
 function stringifyImages(images) {
-  return JSON.stringify(Array.isArray(images) ? images : [])
+  return JSON.stringify(normalizeImageList(images))
 }
 
 function publicUser(user) {
   if (!user) return null
   const { password, ...safeUser } = user
-  return safeUser
+  return {
+    ...safeUser,
+    avatar: normalizeAssetPath(safeUser.avatar || '')
+  }
 }
 
 function getUserById(id) {
@@ -61,7 +80,7 @@ function petRow(row) {
     health: row.health,
     location: row.location,
     desc: row.description,
-    images: parseImages(row.images),
+    images: normalizeImageList(parseImages(row.images)),
     publisherId: row.publisher_id,
     publisher: row.publisher,
     createdAt: row.created_at
@@ -110,9 +129,9 @@ function getPost(id, userId) {
     id: post.id,
     authorId: post.author_id,
     author: post.author,
-    authorAvatar: post.author_avatar || '',
+    authorAvatar: normalizeAssetPath(post.author_avatar || ''),
     content: post.content,
-    images: parseImages(post.images),
+    images: normalizeImageList(parseImages(post.images)),
     createdAt: post.created_at,
     likes,
     favorites,
@@ -165,7 +184,7 @@ app.get('/api/users/me', requireUser, (req, res) => {
 app.put('/api/users/me', requireUser, (req, res) => {
   const { nickname, avatar, city, phone, bio, experience } = req.body
   db.prepare('UPDATE users SET nickname = ?, avatar = ?, city = ?, phone = ?, bio = ?, experience = ? WHERE id = ?')
-    .run(nickname || req.user.nickname, avatar || '', city || '', phone || req.user.phone, bio || '', experience || '', req.user.id)
+    .run(nickname || req.user.nickname, normalizeAssetPath(avatar || ''), city || '', phone || req.user.phone, bio || '', experience || '', req.user.id)
   res.json({ user: publicUser(getUserById(req.user.id)) })
 })
 
@@ -211,7 +230,8 @@ app.get('/api/pets/:id', (req, res) => {
 
 app.post('/api/pets', requireUser, (req, res) => {
   const { name, type, age, gender, city, note, health, location, desc, images } = req.body
-  if (!name || !type || !age || !gender || !city || !note || !health || !location || !desc || !Array.isArray(images) || images.length === 0) {
+  const normalizedImages = normalizeImageList(images)
+  if (!name || !type || !age || !gender || !city || !note || !health || !location || !desc || normalizedImages.length === 0) {
     res.status(400).json({ message: '请完整填写宠物信息并至少添加一张图片' })
     return
   }
@@ -219,7 +239,7 @@ app.post('/api/pets', requireUser, (req, res) => {
   db.prepare(`
     INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name, type, age, gender, city, '待领养', note, health, location, desc, stringifyImages(images), req.user.id, now())
+  `).run(id, name, type, age, gender, city, '待领养', note, health, location, desc, stringifyImages(normalizedImages), req.user.id, now())
   const pet = db.prepare('SELECT pets.*, users.nickname AS publisher FROM pets JOIN users ON users.id = pets.publisher_id WHERE pets.id = ?').get(id)
   res.status(201).json({ pet: petRow(pet) })
 })
@@ -367,7 +387,7 @@ app.get('/api/favorites', requireUser, (req, res) => {
     JOIN posts ON posts.id = post_favorites.post_id
     JOIN users ON users.id = posts.author_id
     WHERE post_favorites.user_id = ?
-  `).all(req.user.id).map((post) => ({ ...post, images: parseImages(post.images) }))
+  `).all(req.user.id).map((post) => ({ ...post, images: normalizeImageList(parseImages(post.images)) }))
   res.json({ pets, posts })
 })
 
@@ -394,12 +414,13 @@ app.get('/api/posts/:id', (req, res) => {
 
 app.post('/api/posts', requireUser, (req, res) => {
   const { content, images } = req.body
-  if (!content || !Array.isArray(images) || images.length === 0) {
+  const normalizedImages = normalizeImageList(images)
+  if (!content || normalizedImages.length === 0) {
     res.status(400).json({ message: '请填写动态内容并至少添加一张图片' })
     return
   }
   const id = makeId('post')
-  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run(id, req.user.id, content, stringifyImages(images), now())
+  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?)').run(id, req.user.id, content, stringifyImages(normalizedImages), now())
   res.status(201).json({ post: getPost(id, req.user.id) })
 })
 
