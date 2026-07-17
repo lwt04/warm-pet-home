@@ -22,6 +22,7 @@
 
     <view class="menu-grid">
       <view v-for="item in menus" :key="item.title" class="menu-item" @click="go(item.url)">
+        <text v-if="item.url === '/pages/profile/messages' && unreadCount" class="badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</text>
         <text class="menu-title">{{ item.title }}</text>
         <text class="menu-desc">{{ item.desc }}</text>
       </view>
@@ -41,6 +42,7 @@ export default {
         city: '请先登录或注册',
         experience: '登录后完善资料'
       },
+      unreadCount: 0,
       menus: [
         { title: '发布救助', desc: '录入待领养宠物', url: '/pages/pet/publish' },
         { title: '我的发布', desc: '管理宠物状态', url: '/pages/pet/my-pets' },
@@ -60,12 +62,14 @@ export default {
     this.loggedIn = isLoggedIn()
     if (this.loggedIn) {
       this.loadUser()
+      this.loadUnreadCount()
     } else {
       this.userInfo = {
         nickname: '未登录',
         city: '请先登录或注册',
         experience: '登录后完善资料'
       }
+      this.unreadCount = 0
     }
   },
   methods: {
@@ -73,6 +77,19 @@ export default {
       const data = await api.getMe()
       this.userInfo = data.user
       setAuth(data.user.id, data.user)
+    },
+    async loadUnreadCount() {
+      const user = getLocalUser() || {}
+      const readAt = Number(uni.getStorageSync(`warmPetMessageReadAt_${user.id}`) || 0)
+      const [receivedData, mineData] = await Promise.all([
+        api.getReceivedApplications(),
+        api.getMyApplications()
+      ])
+      const messages = [
+        ...(receivedData.applications || []),
+        ...(mineData.applications || []).filter((item) => item.status !== '审核中')
+      ]
+      this.unreadCount = messages.filter((item) => new Date(item.createdAt).getTime() > readAt).length
     },
     logout() {
       clearAuth()
@@ -109,7 +126,8 @@ export default {
 .login-tip { padding: 22rpx 26rpx; margin-bottom: 18rpx; border-radius: 24rpx; background: #fff7ed; color: #9b6227; font-size: 26rpx; line-height: 1.5; }
 .logout-btn { height: 76rpx; margin-bottom: 22rpx; border-radius: 22rpx; background: #fff0e8; color: #f08a5d; font-size: 28rpx; line-height: 76rpx; }
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; }
-.menu-item { min-height: 154rpx; padding: 24rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
+.menu-item { position: relative; min-height: 154rpx; padding: 24rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
+.badge { position: absolute; top: 18rpx; right: 18rpx; min-width: 36rpx; height: 36rpx; padding: 0 10rpx; border-radius: 999rpx; background: #e94732; color: #fff; font-size: 22rpx; font-weight: 800; line-height: 36rpx; text-align: center; }
 .menu-title { display: block; margin-bottom: 12rpx; color: #2f2a25; font-size: 29rpx; font-weight: 800; }
 .menu-desc { display: block; color: #8f877d; font-size: 24rpx; line-height: 1.45; }
 </style>
