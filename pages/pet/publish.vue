@@ -83,7 +83,7 @@ export default {
       const data = await api.createPet(this.form)
       uni.showToast({ title: '发布成功', icon: 'success' })
       setTimeout(() => {
-        uni.navigateTo({ url: `/pages/pet/detail?id=${data.pet.id}` })
+        uni.redirectTo({ url: `/pages/pet/detail?id=${data.pet.id}` })
       }, 500)
     }
   }

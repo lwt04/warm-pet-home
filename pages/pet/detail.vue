@@ -22,7 +22,7 @@
         <text class="info">健康状态：{{ pet.health }}</text>
         <text class="info">救助地点：{{ pet.location }}</text>
         <text class="info">发布人：{{ pet.publisher }}</text>
-        <text class="info">发布时间：{{ pet.createdAt }}</text>
+        <text class="info">发布时间：{{ formatDate(pet.createdAt) }}</text>
       </view>
 
       <view class="bottom-actions">
@@ -109,6 +109,13 @@ export default {
         return
       }
       uni.navigateTo({ url: `/pages/adoption/apply?petId=${this.pet.id}` })
+    },
+    formatDate(value) {
+      if (!value) return '未知'
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      const pad = (num) => String(num).padStart(2, '0')
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
     }
   }
 }

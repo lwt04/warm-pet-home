@@ -57,7 +57,7 @@ export default {
       await api.createApplication({ ...this.form, petId: this.petId })
       uni.showToast({ title: '申请已提交', icon: 'success' })
       setTimeout(() => {
-        uni.navigateTo({ url: '/pages/adoption/my' })
+        uni.navigateBack({ delta: 1 })
       }, 500)
     }
   }
