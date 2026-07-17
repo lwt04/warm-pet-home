@@ -1,7 +1,8 @@
 ﻿<template>
   <view class="page profile-page">
     <view class="profile-card">
-      <view class="avatar">{{ avatarText }}</view>
+      <image v-if="userInfo.avatar" class="avatar image-avatar" :src="userInfo.avatar" mode="aspectFill" />
+      <view v-else class="avatar">{{ avatarText }}</view>
       <view class="profile-main">
         <text class="nickname">{{ userInfo.nickname }}</text>
         <text class="profile-desc">{{ userInfo.city }} · {{ userInfo.experience }}</text>
@@ -116,7 +117,8 @@ export default {
 
 <style scoped>
 .profile-card { display: flex; align-items: center; gap: 20rpx; padding: 28rpx; margin-bottom: 22rpx; border-radius: 32rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(90, 72, 54, 0.06); }
-.avatar { display: flex; align-items: center; justify-content: center; width: 104rpx; height: 104rpx; border-radius: 50%; background: #f08a5d; color: #fff; font-size: 36rpx; font-weight: 800; }
+.avatar { display: flex; align-items: center; justify-content: center; width: 104rpx; height: 104rpx; flex-shrink: 0; border-radius: 50%; background: #f08a5d; color: #fff; font-size: 36rpx; font-weight: 800; }
+.image-avatar { display: block; background: #f2eadf; }
 .profile-main { flex: 1; min-width: 0; }
 .nickname { display: block; color: #2f2a25; font-size: 34rpx; font-weight: 800; }
 .profile-desc { display: block; margin-top: 8rpx; color: #8f877d; font-size: 25rpx; }

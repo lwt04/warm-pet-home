@@ -89,7 +89,7 @@ function applicationRow(row) {
 
 function getPost(id, userId) {
   const post = db.prepare(`
-    SELECT posts.*, users.nickname AS author
+    SELECT posts.*, users.nickname AS author, users.avatar AS author_avatar
     FROM posts
     JOIN users ON users.id = posts.author_id
     WHERE posts.id = ?
@@ -110,6 +110,7 @@ function getPost(id, userId) {
     id: post.id,
     authorId: post.author_id,
     author: post.author,
+    authorAvatar: post.author_avatar || '',
     content: post.content,
     images: parseImages(post.images),
     createdAt: post.created_at,
@@ -162,9 +163,9 @@ app.get('/api/users/me', requireUser, (req, res) => {
 })
 
 app.put('/api/users/me', requireUser, (req, res) => {
-  const { nickname, city, phone, bio, experience } = req.body
-  db.prepare('UPDATE users SET nickname = ?, city = ?, phone = ?, bio = ?, experience = ? WHERE id = ?')
-    .run(nickname || req.user.nickname, city || '', phone || req.user.phone, bio || '', experience || '', req.user.id)
+  const { nickname, avatar, city, phone, bio, experience } = req.body
+  db.prepare('UPDATE users SET nickname = ?, avatar = ?, city = ?, phone = ?, bio = ?, experience = ? WHERE id = ?')
+    .run(nickname || req.user.nickname, avatar || '', city || '', phone || req.user.phone, bio || '', experience || '', req.user.id)
   res.json({ user: publicUser(getUserById(req.user.id)) })
 })
 

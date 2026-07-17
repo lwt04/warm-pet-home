@@ -3,7 +3,8 @@
     <view v-if="post">
       <view class="post-card">
         <view class="post-head">
-          <view class="avatar">{{ post.author.slice(0, 1) }}</view>
+          <image v-if="post.authorAvatar" class="avatar image-avatar" :src="post.authorAvatar" mode="aspectFill" />
+          <view v-else class="avatar">{{ post.author.slice(0, 1) }}</view>
           <view>
             <text class="author">{{ post.author }}</text>
             <text class="time">{{ post.createdAt }}</text>
@@ -105,7 +106,8 @@ export default {
 <style scoped>
 .post-card, .comment-box { padding: 26rpx; margin-bottom: 22rpx; border-radius: 28rpx; background: #fff; }
 .post-head { display: flex; align-items: center; gap: 18rpx; margin-bottom: 18rpx; }
-.avatar { display: flex; align-items: center; justify-content: center; width: 72rpx; height: 72rpx; border-radius: 50%; background: #f2eadf; color: #9b6227; font-weight: 800; }
+.avatar { display: flex; align-items: center; justify-content: center; width: 72rpx; height: 72rpx; flex-shrink: 0; border-radius: 50%; background: #f2eadf; color: #9b6227; font-weight: 800; }
+.image-avatar { display: block; }
 .author, .time, .content { display: block; }
 .author { color: #2f2a25; font-size: 29rpx; font-weight: 800; }
 .time { margin-top: 6rpx; color: #9d9489; font-size: 23rpx; }

@@ -34,6 +34,7 @@ function initDatabase() {
       nickname TEXT NOT NULL,
       phone TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      avatar TEXT DEFAULT '',
       city TEXT DEFAULT '',
       bio TEXT DEFAULT '',
       experience TEXT DEFAULT '',
@@ -123,6 +124,7 @@ function initDatabase() {
 
   ensureColumn('pets', 'images', "TEXT DEFAULT '[]'")
   ensureColumn('posts', 'images', "TEXT DEFAULT '[]'")
+  ensureColumn('users', 'avatar', "TEXT DEFAULT ''")
 
   const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get().count
   if (userCount > 0) return
