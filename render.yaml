@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: warm-pet-home
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: WARM_PET_DATA_DIR
+        value: /opt/render/project/src/server/data
+    disk:
+      name: warm-pet-home-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1

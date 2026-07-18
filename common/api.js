@@ -1,6 +1,17 @@
-const BASE_URL = 'http://localhost:3000'
+const LOCAL_BASE_URL = 'http://localhost:3000'
 const TOKEN_KEY = 'warmPetToken'
 const USER_KEY = 'warmPetUserInfo'
+
+function getBaseUrl() {
+  const customBase = uni.getStorageSync('warmPetBaseUrl')
+  if (customBase) return String(customBase).replace(/\/$/, '')
+  if (typeof window !== 'undefined' && window.location) {
+    const { origin = '' } = window.location
+    if (/localhost:8080|127\.0\.0\.1:8080/.test(origin)) return LOCAL_BASE_URL
+    if (origin) return origin.replace(/\/$/, '')
+  }
+  return LOCAL_BASE_URL
+}
 
 function getToken() {
   return uni.getStorageSync(TOKEN_KEY) || ''
@@ -29,7 +40,7 @@ export function clearAuth() {
 export function request(options) {
   return new Promise((resolve, reject) => {
     uni.request({
-      url: `${BASE_URL}${options.url}`,
+      url: `${getBaseUrl()}${options.url}`,
       method: options.method || 'GET',
       data: options.data || {},
       header: {

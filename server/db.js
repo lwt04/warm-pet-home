@@ -2,7 +2,7 @@
 const path = require('node:path')
 const { DatabaseSync } = require('node:sqlite')
 
-const dataDir = path.join(__dirname, 'data')
+const dataDir = process.env.WARM_PET_DATA_DIR || path.join(__dirname, 'data')
 const dbPath = path.join(dataDir, 'warm-pet-home.db')
 
 if (!fs.existsSync(dataDir)) {

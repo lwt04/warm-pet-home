@@ -1,5 +1,7 @@
 ﻿const express = require('express')
 const cors = require('cors')
+const fs = require('node:fs')
+const path = require('node:path')
 const { db, initDatabase, makeId, now } = require('./db')
 
 initDatabase()
@@ -488,6 +490,17 @@ app.delete('/api/posts/:postId/comments/:commentId', requireUser, (req, res) => 
   res.json({ message: '评论已删除' })
 })
 
+const publicDir = path.join(__dirname, 'public')
+const publicIndex = path.join(publicDir, 'index.html')
+
+if (fs.existsSync(publicIndex)) {
+  app.use(express.static(publicDir))
+  app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(publicIndex)
+  })
+}
+
 app.listen(port, () => {
   console.log(`Warm Pet Home server is running at http://localhost:${port}`)
 })
+
