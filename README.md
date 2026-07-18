@@ -70,6 +70,8 @@ npm.cmd run server
 
 建议测试申请审核时，用普通用户申请志愿者发布的宠物，再切换志愿者账号审核。
 
+说明：后端启动时会检查演示数据，若数据库为空或演示记录缺失，会自动补充测试账号、宠物信息和宠物圈动态，作为 Render Free 实例数据重置时的兜底。
+
 ## Tab 图标路径
 
 底部导航图标放在 `static/tabbar/` 目录，文件名如下：
@@ -113,15 +115,11 @@ npm.cmd run server
 
 线上 Demo 地址：
 
-```text
-https://warm-pet-home.onrender.com
-```
+[https://warm-pet-home.onrender.com](https://warm-pet-home.onrender.com)
 
 接口健康检查地址：
 
-```text
-https://warm-pet-home.onrender.com/api/health
-```
+[https://warm-pet-home.onrender.com/api/health](https://warm-pet-home.onrender.com/api/health)
 
 说明：线上服务由 Render 自动启动，用户无需本地运行后端，打开线上地址即可使用。
 
