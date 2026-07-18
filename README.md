@@ -95,6 +95,7 @@ npm.cmd run server
 - 2026-07-17：补充消息通知红点提醒、收藏/点赞内容跳转详情、个人头像更换和宠物圈头像同步显示
 - 2026-07-17：修复图片临时地址导致刷新后空白的问题，补充宠物、动态和头像图片持久化处理
 - 2026-07-18：补充线上部署配置，后端支持同时托管前端页面与 API
+- 2026-07-19：完成 Render 线上部署，前端页面和后端接口均可通过线上地址访问
 
 ## 提交材料
 
@@ -105,13 +106,28 @@ npm.cmd run server
 
 ## 下一步计划
 
-- 在 Render 上完成线上部署并补上最终访问地址
 - 继续补充演示数据，方便录屏展示账号互动流程
 - 如需进一步美化，再微调暖橙主题 UI 细节和页面空状态
 
-## 线上部署
+## 线上访问
 
-仓库已提供 `render.yaml`，适合直接用 Render Blueprint 创建 Web Service。
+线上 Demo 地址：
+
+```text
+https://warm-pet-home.onrender.com
+```
+
+接口健康检查地址：
+
+```text
+https://warm-pet-home.onrender.com/api/health
+```
+
+说明：线上服务由 Render 自动启动，用户无需本地运行后端，打开线上地址即可使用。
+
+## 部署配置
+
+仓库已提供 `render.yaml`，也可以在 Render 中手动创建 Web Service。
 
 部署时使用：
 
@@ -119,10 +135,4 @@ npm.cmd run server
 - 健康检查：`/api/health`
 - 数据目录：`server/data`
 
-如果使用 Render 的持久化磁盘，建议把挂载路径保持为 `server/data` 对应目录，这样 SQLite 数据不会因为重启而丢失。
-
-部署完成后，把线上访问地址补到这里：
-
-```text
-https://你的线上地址
-```
+当前线上服务使用 Render Free 实例，长时间无人访问后首次打开可能需要等待几十秒。若升级到付费实例并使用持久化磁盘，建议把挂载路径保持为 `/opt/render/project/src/server/data`，这样 SQLite 数据不会因为重启而丢失。
