@@ -106,11 +106,13 @@ npm.cmd run server
 - [AI 使用记录](docs/prompt_log.md)
 - [代码审查记录](docs/code_review.md)
 - [个人总结](docs/personal_summary.md)
+- [项目演示视频：林婉彤 暖宠归家.mp4](https://pan.baidu.com/s/1Erj7ar6O54hjwspNb3MRqA?pwd=kdtw)
+  - 提取码：`kdtw`
 
-## 下一步计划
+## 最终说明
 
-- 录制项目演示视频，展示登录、发布、申请、审核、点赞、收藏、评论等核心流程
-- 将演示视频网盘链接补充到仓库文档中，作为最终提交材料
+- 线上 Demo、接口文档、AI 使用记录、代码审查记录、个人总结和演示视频链接均已补充
+- Render Free 实例长时间无人访问后首次打开可能需要等待几十秒
 
 ## 线上访问
 
