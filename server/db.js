@@ -183,6 +183,52 @@ function initDatabase() {
     db.prepare('DELETE FROM post_favorites WHERE post_id = ?').run(postId)
     db.prepare('DELETE FROM posts WHERE id = ?').run(postId)
   })
+
+  const postSeeds = [
+    ['post_2001', 'u_demo', '今天把照片重新整理了一遍，很多瞬间都很值得留下来。', '["/static/uploads/posts/1-1.jpg","/static/uploads/posts/1-2.jpg","/static/uploads/posts/1-3.jpg"]', 6],
+    ['post_2002', 'u_demo', '这几天总觉得时间过得很快，忙起来的时候也挺充实。', '["/static/uploads/posts/2-1.jpg","/static/uploads/posts/2-2.jpg"]', 5],
+    ['post_2003', 'u_demo', '记录一下今天的状态，虽然累，但还是觉得很有意义。', '["/static/uploads/posts/3-1.jpg","/static/uploads/posts/3-2.jpg"]', 4],
+    ['post_2004', 'u_rescue', '今天的天气很好，拍出来的照片也比平时更温柔一点。', '["/static/uploads/posts/4-1.jpg","/static/uploads/posts/4-2.jpg"]', 3],
+    ['post_2005', 'u_rescue', '下午抽空整理了空间，感觉整个环境都清爽了不少。', '["/static/uploads/posts/5-1.jpg","/static/uploads/posts/5-2.jpg"]', 2],
+    ['post_2006', 'u_rescue', '把今天的小片段留在这里，过段时间再看应该会很有意思。', '["/static/uploads/posts/6-1.jpg","/static/uploads/posts/6-2.jpg"]', 1]
+  ]
+
+  const upsertPost = db.prepare(`
+    INSERT INTO posts (id, author_id, content, images, created_at)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      author_id = excluded.author_id,
+      content = excluded.content,
+      images = excluded.images,
+      created_at = excluded.created_at
+  `)
+
+  const postComment = db.prepare(`
+    INSERT INTO comments (id, post_id, author_id, content, created_at)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      post_id = excluded.post_id,
+      author_id = excluded.author_id,
+      content = excluded.content,
+      created_at = excluded.created_at
+  `)
+
+  postSeeds.forEach(([id, authorId, content, images, minuteOffset], index) => {
+    const createdAtValue = new Date(Date.now() - minuteOffset * 60000).toISOString()
+    upsertPost.run(id, authorId, content, images, createdAtValue)
+
+    const commentId = `c_200${index + 1}`
+    const commentAuthorId = authorId === 'u_demo' ? 'u_rescue' : 'u_demo'
+    const commentContent = [
+      '这张照片很有氛围感。',
+      '看起来心情很好。',
+      '今天的记录也很温柔。',
+      '这个画面很舒服。',
+      '整理得很用心。',
+      '留住这些小瞬间真好。'
+    ][index]
+    postComment.run(commentId, id, commentAuthorId, commentContent, createdAtValue)
+  })
 }
 
 module.exports = {
