@@ -127,50 +127,62 @@ function initDatabase() {
   ensureColumn('users', 'avatar', "TEXT DEFAULT ''")
 
   const createdAt = now()
-  db.prepare(`
-    INSERT INTO users (id, nickname, phone, password, city, bio, experience, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run('u_demo', '暖宠用户', '13800000000', '123456', '广州', '喜欢小动物，愿意认真了解并长期照顾它们。', '有基础养宠经验', createdAt)
+  const users = [
+    ['u_demo', '暖心救助站', '13800000000', '123456', '/static/uploads/avatars/1.jpg', '广州', '记录救助与领养回访，帮助小动物找到稳定家庭。', '救助经验 1 年'],
+    ['u_rescue', '暖宠志愿者', '13900000000', '123456', '/static/uploads/avatars/2.jpg', '深圳', '长期参与流浪动物救助，负责临时安置和领养审核。', '救助经验 2 年']
+  ]
 
-  db.prepare(`
-    INSERT INTO users (id, nickname, phone, password, city, bio, experience, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run('u_rescue', '暖宠志愿者', '13900000000', '123456', '深圳', '长期参与流浪动物救助。', '救助经验 2 年', createdAt)
+  const upsertUser = db.prepare(`
+    INSERT INTO users (id, nickname, phone, password, avatar, city, bio, experience, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      nickname = excluded.nickname,
+      phone = excluded.phone,
+      password = excluded.password,
+      avatar = excluded.avatar,
+      city = excluded.city,
+      bio = excluded.bio,
+      experience = excluded.experience
+  `)
+  users.forEach((user) => upsertUser.run(...user, createdAt))
 
-  db.prepare(`
+  const pets = [
+    ['p_1001', '小橘', '猫咪', '约 8 个月', '男孩', '广州', '待领养', '亲人爱蹭腿，适合新手领养。', '已驱虫，精神状态良好', '天河区小区楼下', '在小区楼下连续出现一周，性格很亲人，会主动靠近人。食欲正常，已做基础驱虫，适合有稳定居住环境的家庭。', '["/static/uploads/pets/xiaoju-1.jpg","/static/uploads/pets/xiaoju-2.jpg"]', 'u_rescue'],
+    ['p_1002', '团团', '狗狗', '约 1 岁', '女孩', '深圳', '待领养', '温顺安静，正在等待一个家。', '食欲正常，待进一步体检', '南山区临时安置点', '被志愿者在路边发现，性格安静不乱叫，对人友好。希望领养人能定期遛狗，不长期笼养。', '["/static/uploads/pets/tuantuan-1.jpg","/static/uploads/pets/tuantuan-2.jpg"]', 'u_rescue'],
+    ['p_1003', '奶盖', '猫咪', '约 3 个月', '女孩', '东莞', '待领养', '胆子小但很粘人，需要耐心陪伴。', '已体内外驱虫，待疫苗', '东城街边绿化带', '雨天被发现躲在绿化带里，目前已经临时安置。刚开始有点怕人，熟悉后会撒娇。', '["/static/uploads/pets/naigai-1.jpg","/static/uploads/pets/naigai-2.jpg","/static/uploads/pets/naigai-3.jpg"]', 'u_rescue'],
+    ['p_1004', '豆包', '狗狗', '约 2 岁', '男孩', '佛山', '待领养', '活泼亲人，喜欢散步。', '身体结实，已清洁护理', '禅城区菜市场附近', '长期在菜市场附近流浪，被好心人喂养。性格开朗，适合有遛狗时间、愿意稳定陪伴的家庭。', '["/static/uploads/pets/doubao-1.jpg","/static/uploads/pets/doubao-2.jpg"]', 'u_rescue'],
+    ['p_1005', '雪球', '兔子', '约 6 个月', '女孩', '广州', '待领养', '安静乖巧，适合有养兔经验的人。', '食欲正常，毛发干净', '海珠区宠物店门口', '疑似被遗弃在宠物店门口，目前状态稳定。需要领养人了解兔子的饮食和笼舍清洁。', '["/static/uploads/pets/xueqiu-1.jpg","/static/uploads/pets/xueqiu-2.jpg"]', 'u_rescue'],
+    ['p_1006', '黑糖', '猫咪', '约 1 岁半', '男孩', '深圳', '待领养', '成熟稳重，会用猫砂。', '已绝育，已驱虫', '福田区停车场', '在停车场生活了一段时间，性格稳定，不挑食，会用猫砂。适合想领养成年猫的家庭。', '["/static/uploads/pets/heitang-1.jpg","/static/uploads/pets/heitang-2.jpg"]', 'u_demo'],
+    ['p_1007', '可乐', '狗狗', '约 5 个月', '男孩', '广州', '待领养', '活泼小狗，恢复中。', '轻微皮肤问题，已在护理', '白云区公交站附近', '被发现时有轻微皮肤问题，目前已开始护理。性格活泼，喜欢和人互动，需要领养人继续关注皮肤恢复。', '["/static/uploads/pets/kele-1.jpg","/static/uploads/pets/kele-2.jpg"]', 'u_demo'],
+    ['p_1008', '米粒', '仓鼠', '约 4 个月', '女孩', '东莞', '待领养', '小巧安静，需要安全笼具。', '状态稳定，进食正常', '学校门口纸箱内', '被放在学校门口纸箱里，目前临时照顾中。适合了解仓鼠习性的领养人，需要准备合适笼具和垫料。', '["/static/uploads/pets/mili-1.jpg","/static/uploads/pets/mili-2.jpg","/static/uploads/pets/mili-3.jpg"]', 'u_demo'],
+    ['p_1009', '花花', '猫咪', '约 2 岁', '女孩', '佛山', '待领养', '温柔三花猫，适合安静家庭。', '已绝育，性格稳定', '居民楼楼道', '原本在居民楼附近活动，经常被邻居喂养。性格温柔，不太闹腾，希望找到长期稳定的家庭。', '["/static/uploads/pets/huahua-1.jpg","/static/uploads/pets/huahua-2.jpg"]', 'u_demo'],
+    ['p_1010', '啾啾', '其他', '约 1 岁', '未知', '广州', '待领养', '亲人的小鹦鹉，需要防飞环境。', '精神良好，羽毛完整', '公园管理处', '在公园附近被发现，疑似走失或被遗弃。会主动靠近人，领养人需要准备安全鸟笼，并注意关窗防飞。', '["/static/uploads/pets/jiujiu-1.jpg","/static/uploads/pets/jiujiu-2.jpg"]', 'u_demo']
+  ]
+
+  const upsertPet = db.prepare(`
     INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run('p_1001', '小橘', '猫咪', '约 8 个月', '男孩', '广州', '待领养', '亲人，会蹭手，已做基础驱虫。', '已驱虫，精神状态良好', '广州市天河区救助点', '性格亲人，会主动靠近人，适合有耐心、能接受适应期的家庭领养。', '["/static/uploads/pets/1.jpg","/static/uploads/pets/2.jpg"]', 'u_rescue', createdAt)
+    ON CONFLICT(id) DO UPDATE SET
+      name = excluded.name,
+      type = excluded.type,
+      age = excluded.age,
+      gender = excluded.gender,
+      city = excluded.city,
+      note = excluded.note,
+      health = excluded.health,
+      location = excluded.location,
+      description = excluded.description,
+      images = excluded.images,
+      publisher_id = excluded.publisher_id
+  `)
+  pets.forEach((pet) => upsertPet.run(...pet, createdAt))
 
-  db.prepare(`
-    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run('p_1002', '豆豆', '狗狗', '约 1 岁', '女孩', '深圳', '待领养', '性格温顺，暂住救助点。', '食欲正常，待进一步体检', '深圳市南山区临时安置点', '被志愿者发现后临时安置，亲人不护食，希望找到稳定照顾人。', '["/static/uploads/pets/2.jpg"]', 'u_demo', createdAt)
-
-  db.prepare(`
-    INSERT INTO pets (id, name, type, age, gender, city, status, note, health, location, description, images, publisher_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run('p_1003', '团团', '猫咪', '约 3 个月', '女孩', '泉州', '待领养', '活泼亲人，适合有耐心的新手家庭。', '已体检，待疫苗', '泉州市丰泽区临时救助点', '小团团在小区花坛附近被发现，目前吃喝正常，会用猫砂，期待稳定领养。', '["/static/uploads/pets/1.jpg"]', 'u_rescue', createdAt)
-
-  db.prepare("UPDATE pets SET images = ? WHERE id = ? AND images = '[]'").run('["/static/uploads/pets/1.jpg","/static/uploads/pets/2.jpg"]', 'p_1001')
-  db.prepare("UPDATE pets SET images = ? WHERE id = ? AND images = '[]'").run('["/static/uploads/pets/2.jpg"]', 'p_1002')
-
-  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
-    .run('post_1001', 'u_rescue', '救助点新来的小猫已经适应环境，正在寻找稳定领养人。', '["/static/uploads/pets/1.jpg","/static/uploads/pets/2.jpg"]', createdAt)
-  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
-    .run('post_1002', 'u_demo', '今天去救助点看望小橘，胆子小但很亲人，慢慢靠近就会蹭手。', '["/static/uploads/pets/1.jpg"]', createdAt)
-  db.prepare('INSERT INTO posts (id, author_id, content, images, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
-    .run('post_1003', 'u_rescue', '救助前请先确认位置、健康状态和临时安置方式，信息越完整越容易被帮助。', '["/static/uploads/pets/2.jpg"]', createdAt)
-  db.prepare('INSERT INTO comments (id, post_id, author_id, content, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
-    .run('c_1001', 'post_1001', 'u_demo', '希望它早点遇到家。', createdAt)
-  db.prepare('INSERT INTO post_likes (post_id, user_id, created_at) VALUES (?, ?, ?) ON CONFLICT(post_id, user_id) DO NOTHING').run('post_1001', 'u_demo', createdAt)
-  db.prepare('INSERT INTO post_likes (post_id, user_id, created_at) VALUES (?, ?, ?) ON CONFLICT(post_id, user_id) DO NOTHING').run('post_1002', 'u_rescue', createdAt)
-  db.prepare('INSERT INTO post_favorites (post_id, user_id, created_at) VALUES (?, ?, ?) ON CONFLICT(post_id, user_id) DO NOTHING').run('post_1001', 'u_demo', createdAt)
+  ;['post_1001', 'post_1002', 'post_1003'].forEach((postId) => {
+    db.prepare('DELETE FROM comments WHERE post_id = ?').run(postId)
+    db.prepare('DELETE FROM post_likes WHERE post_id = ?').run(postId)
+    db.prepare('DELETE FROM post_favorites WHERE post_id = ?').run(postId)
+    db.prepare('DELETE FROM posts WHERE id = ?').run(postId)
+  })
 }
 
 module.exports = {
