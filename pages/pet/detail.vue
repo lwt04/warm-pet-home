@@ -3,7 +3,7 @@
     <view v-if="pet">
       <swiper v-if="pet.images && pet.images.length" class="cover-swiper" indicator-dots circular>
         <swiper-item v-for="image in pet.images" :key="image">
-          <image class="cover-image" :src="image" mode="aspectFill" />
+          <image class="cover-image" :src="image" mode="aspectFit" />
         </swiper-item>
       </swiper>
       <view v-else class="cover"><text>{{ pet.type }}</text></view>
@@ -130,7 +130,7 @@ export default {
 
 <style scoped>
 .cover { display: flex; align-items: center; justify-content: center; height: 420rpx; margin-bottom: 24rpx; border-radius: 32rpx; background: #f2eadf; color: #9b6227; font-size: 42rpx; font-weight: 800; }
-.cover-swiper { height: 420rpx; margin-bottom: 24rpx; border-radius: 32rpx; overflow: hidden; background: #f2eadf; }
+.cover-swiper { height: 520rpx; margin-bottom: 24rpx; border-radius: 32rpx; overflow: hidden; background: #f2eadf; }
 .cover-image { width: 100%; height: 100%; }
 .detail-card { padding: 28rpx; margin-bottom: 22rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 12rpx 34rpx rgba(90, 72, 54, 0.07); }
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; margin-bottom: 14rpx; }
